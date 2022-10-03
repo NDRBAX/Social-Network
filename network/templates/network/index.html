@@ -1,0 +1,33 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+    <div class="row justify-content-center">
+
+            <div id="page-name"></div>
+
+            <div id="show-alert"></div>
+
+            <div id="new-post">
+                
+                <h3>Make a new post</h3>
+
+                
+                <form id="new-post-form">
+                    <div class="form-group">
+                        <textarea class="form-control" id="new-post-text" rows="3" placeholder="What's on your mind?"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-2">Post</button>
+                </form>
+
+                <div id="all-posts"></div>
+    
+
+            </div>
+
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'network/index.js' %}"></script>
+{% endblock %}
