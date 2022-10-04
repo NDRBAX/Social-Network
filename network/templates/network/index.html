@@ -4,26 +4,22 @@
 {% block body %}
     <div class="row justify-content-center">
 
-            <div id="page-name"></div>
+        <div id="show-alert"></div>
 
-            <div id="show-alert"></div>
+        <div id="new-post-section">
+            <h3>Make a new post</h3>
 
-            <div id="new-post">
-                
-                <h3>Make a new post</h3>
+            <form id="new-post-form">
+                <div class="form-group">
+                    <textarea class="form-control" id="new-post-content" rows="3" placeholder="What's on your mind?"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Post</button>
+            </form>
+        </div>
 
-                
-                <form id="new-post-form">
-                    <div class="form-group">
-                        <textarea class="form-control" id="new-post-text" rows="3" placeholder="What's on your mind?"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary mt-2">Post</button>
-                </form>
-
-                <div id="all-posts"></div>
-    
-
-            </div>
+        <div id="profile-section">Profile</div>
+        <div id="following-section">Following</div>
+        <div id="all-posts-section">All post</div>
 
     </div>
 {% endblock %}
