@@ -17,25 +17,25 @@
                 <ul class="navbar-nav mr-auto">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" id="profile" data-section="profile"><strong>{{ user.username }}</strong></a>
+                            <a class="nav-link" id="profile" data-section="profile-section"><strong>{{ user.username }}</strong></a>
                         </li>
                     {% endif %}
                     <li class="nav-item">
-                    <a class="nav-link" data-section="all-posts" id="all-posts">All Posts</a>
+                    <a class="nav-link" data-section="all-posts-section" id="all-posts">All Posts</a>
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" data-section="following" id="following">Following</a>
+                            <a class="nav-link" data-section="following-section" id="following">Following</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-section="logout" href="{% url 'logout' %}">Log Out</a>
+                            <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" data-section="login" href="{% url 'login' %}">Log In</a>
+                            <a class="nav-link" href="{% url 'login' %}">Log In</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-section="register" href="{% url 'register' %}">Register</a>
+                            <a class="nav-link"  href="{% url 'register' %}">Register</a>
                         </li>
                     {% endif %}
                 </ul>
