@@ -69,11 +69,11 @@ def register(request):
 
 @login_required
 def section(request, section):
-    
     if section == "all-posts-section":
         posts = Post.objects.all()
     elif section == "profile-section":
         posts = Post.objects.filter(user=request.user)
+
     elif section == "following-section":
         following = Follow.objects.get(follower=request.user).following.all()
         posts = Post.objects.filter(user__in=following) 
