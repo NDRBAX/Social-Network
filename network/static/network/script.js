@@ -21,13 +21,10 @@ function clear() {
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("a").forEach((link) => {
     link.onclick = () => {
-      location.reload();
-      console.log("clicked");
       const section = link.dataset.section;
-      if (section) {
-        showSection(section);
-        history.pushState({ section }, section, "#" + section);
-      }
+      console.log("clicked");
+      showSection(section);
+      history.pushState({ section }, section, "#" + section);
     };
   });
 
@@ -64,11 +61,11 @@ function showSection(section) {
     ];
 
     sections.forEach((page) => {
-      if (page !== section) {
-        document.querySelector(`#${page}`).style.display = "none";
-      } else {
+      if (page === section) {
         document.querySelector(`#${page}`).style.display = "block";
-        fetch_posts(section);
+        fetch_posts(page);
+      } else {
+        document.querySelector(`#${page}`).style.display = "none";
       }
     });
   } catch (error) {
