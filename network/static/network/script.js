@@ -19,16 +19,16 @@ function clear() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll("a").forEach((link) => {
+  document.querySelectorAll(".nav-link").forEach((link) => {
     link.onclick = () => {
       const section = link.dataset.section;
-      console.log("clicked");
       showSection(section);
-      history.pushState({ section }, section, "#" + section);
+      history.pushState({ section: section }, section, `/#${section}`);
     };
   });
 
   document.querySelector("#new-post-form").onsubmit = post_button;
+  document.querySelector("#edit-profile-form").onsubmit = edit_profile;
 
   refresh();
 });
@@ -54,144 +54,140 @@ function refresh() {
 // Show the section with the given name
 function showSection(section) {
   try {
-    let sections = [
-      "profile-section",
-      "following-section",
-      "all-posts-section",
-    ];
+    if (section === "profile-section") {
+      document.querySelector(`#${section}`).style.display = "block";
+      document.querySelector("#all-posts-section").style.display = "none";
+      document.querySelector("#following-section").style.display = "none";
 
-    sections.forEach((page) => {
-      if (page === section) {
-        document.querySelector(`#${page}`).style.display = "block";
-        fetch_posts(page);
-      } else {
-        document.querySelector(`#${page}`).style.display = "none";
-      }
-    });
+      document.querySelector("#posts").style.display = "block";
+      document.querySelector("#pagination").style.display = "block";
+      document.querySelector("#new-post-section").style.display = "block";
+
+      fetch_posts(section);
+    } else if (section === "all-posts-section") {
+      document.querySelector(`#${section}`).style.display = "block";
+      document.querySelector("#profile-section").style.display = "none";
+      document.querySelector("#following-section").style.display = "none";
+
+      document.querySelector("#posts").style.display = "block";
+      document.querySelector("#pagination").style.display = "block";
+      document.querySelector("#new-post-section").style.display = "block";
+
+      fetch_posts(section);
+    } else if (section === "following-section") {
+      document.querySelector(`#${section}`).style.display = "block";
+
+      document.querySelector("#profile-section").style.display = "none";
+      document.querySelector("#all-posts-section").style.display = "none";
+      document.querySelector("#posts").style.display = "none";
+      document.querySelector("#pagination").style.display = "none";
+      document.querySelector("#new-post-section").style.display = "none";
+    }
   } catch (error) {
     console.log(error);
   }
 }
 
+// show posts
 function show_posts(posts, page, posts_per_page) {
   try {
+    let total_pages = Math.ceil(posts.length / posts_per_page);
     let start = (page - 1) * posts_per_page;
-    let end = page * posts_per_page;
+    let end = start + posts_per_page;
+    let posts_to_show = posts.slice(start, end);
 
-    posts.slice(start, end).forEach((post) => {
-      const post_element = document.createElement("div");
-      post_element.setAttribute("id", "post");
-      post_element.className = "card mb-2";
+    clear();
 
-      const post_header = document.createElement("div");
-      post_header.className = "card-header";
-      post_header.innerHTML = post.user;
-      post_element.appendChild(post_header);
+    if (posts.length === 0) {
+      document.querySelector(
+        "#posts"
+      ).innerHTML = `<div class="alert alert-info" role="alert">No posts yet.</div>`;
+    } else {
+      posts_to_show.forEach((post) => {
+        const post_div = document.createElement("div");
+        post_div.setAttribute("class", "post card mb-3");
+        post_div.setAttribute("id", "post");
+        post_div.innerHTML = `
+        <div class="card-body">
+          <div class="row justify-content-between">
+            <div class="col-6 d-flex inline-block">
+              <img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30">
+              <h5 class="card-title">${post.user}</h5>
+            </div>
+            <div class="col-6 text-end">
+              <p class="card-text"><small class="text-muted">${post.timestamp}</small></p>
+            </div>
+          </div>
+          <p class="card-text">${post.content}</p>
 
-      const post_body = document.createElement("div");
-      post_body.className = "card-body";
-      post_body.innerHTML = post.content;
-      post_element.appendChild(post_body);
+          <div class="row justify-content-between">
+            <div class="col">
+              <a class="me-3" onclick="like_post('${post.id}')">
+                <i class="fas fa-thumbs-up"></i> Like
+              </a>
+              <a class="me-3" onclick="unlike_post('${post.id}')">
+                <i class="fas fa-thumbs-down"></i> Unlike
+              </a>
+              <a class="me-3"  onclick="edit_post('${post.id}')">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+              <a class="me-3"  onclick="delete_post('${post.id}')">
+                <i class="fas fa-trash-alt"></i> Delete
+              </a>
+            </div>
+            <div class="col text-end">
+              <p class="card-text"><small class="text-muted">${post.likes} people like this</small></p>
+            </div>
+          </div>
+        
+      </div>
+    `;
+        document.querySelector("#posts").append(post_div);
+      });
 
-      const post_footer = document.createElement("div");
-      post_footer.className = "card-footer";
-      post_footer.innerHTML = post.timestamp;
-      post_element.appendChild(post_footer);
+      document.querySelector(
+        "#page-number"
+      ).innerHTML = `${page} of ${total_pages}`;
 
-      document.querySelector("#posts").append(post_element);
-    });
+      document.querySelector("#next").onclick = () => {
+        if (page < total_pages) {
+          page++;
+          clear();
+          show_posts(posts, page, posts_per_page);
+          document.querySelector(
+            "#page-number"
+          ).innerHTML = `${page} of ${total_pages}`;
+        }
+      };
+
+      document.querySelector("#previous").onclick = () => {
+        if (page > 1) {
+          page--;
+          clear();
+          show_posts(posts, page, posts_per_page);
+          document.querySelector(
+            "#page-number"
+          ).innerHTML = `${page} of ${total_pages}`;
+        }
+      };
+    }
   } catch (error) {
     console.log(error);
   }
 }
 
 async function fetch_posts(name) {
-  if (name === "all-posts-section" || name === "profile-section") {
-    document.querySelector("#new-post-section").style.display = "block";
+  try {
+    const response = await fetch(`/network/${name}`);
+    const posts = await response.json();
+    console.log(posts);
 
-    await fetch(`/network/${name}`)
-      .then((response) => response.json())
-      .then((posts) => {
-        if (posts.length === 0) {
-          document.querySelector(`#${name}`).innerHTML = "No posts to show";
-        } else {
-          let page = 1;
-          let posts_per_page = 10;
-          let total_pages = Math.ceil(posts.length / posts_per_page);
+    let page = 1;
+    let posts_per_page = 10;
 
-          document.querySelector(`#${name}`).innerHTML = `
-            <div class="row mt-5">
-                <div class="col-12">
-                  <div id="posts"></div>
-                </div>
-              </div>
-              <div class="row mt-5 mb-5">
-                <div class="col-1">
-                  <button class="btn btn-primary" id="previous">Previous</button>
-                </div>
-                <div class="col-10 text-center">
-                  <p id="page-number"></p>
-                </div>
-                <div class="col-1">
-                  <button class="btn btn-primary" id="next">Next</button>
-                </div>
-            </div>`;
-
-          show_posts(posts, page, posts_per_page);
-
-          document.querySelector(
-            "#page-number"
-          ).innerHTML = `${page} of ${total_pages}`;
-
-          document.querySelector("#next").onclick = () => {
-            if (page < total_pages) {
-              page++;
-              clear();
-              show_posts(posts, page, posts_per_page);
-              document.querySelector(
-                "#page-number"
-              ).innerHTML = `${page} of ${total_pages}`;
-            }
-          };
-
-          document.querySelector("#previous").onclick = () => {
-            if (page > 1) {
-              page--;
-              clear();
-              show_posts(posts, page, posts_per_page);
-              document.querySelector(
-                "#page-number"
-              ).innerHTML = `${page} of ${total_pages}`;
-            }
-          };
-        }
-      });
-  } else if (name === "following-section") {
-    document.querySelector("#new-post-section").style.display = "none";
-    await fetch(`/network/${name}`)
-      .then((response) => response.json())
-      .then((users) => {
-        if (users.length === 0) {
-          document.querySelector("#following-section").innerHTML =
-            "No users to show";
-        } else {
-          users.forEach((user) => {
-            const user_element = document.createElement("div");
-            user_element.setAttribute("id", "user");
-
-            const ul = document.createElement("ul");
-            ul.className = "list-group page-list";
-            user_element.appendChild(ul);
-
-            const li = document.createElement("li");
-            li.className = "list-group-item mb-1";
-            li.innerHTML = user.posts;
-            ul.appendChild(li);
-
-            document.querySelector(`#${name}`).append(user_element);
-          });
-        }
-      });
+    show_posts(posts, page, posts_per_page);
+  } catch (error) {
+    console.log(error);
   }
 }
 
@@ -232,4 +228,37 @@ function post_button(event, section) {
     showSection("all-posts-section");
   }
   history.pushState({ section }, section, section);
+}
+
+// edit profile via modal form
+function edit_profile(event) {
+  event.preventDefault();
+
+  const username = document.querySelector("#username").value;
+  const email = document.querySelector("#email").value;
+  const avatar = document.querySelector("#avatar").value;
+  const header_image = document.querySelector("#header-image").value;
+  const bio = document.querySelector("#bio").value;
+
+  fetch("/edit-profile", {
+    method: "Put",
+    body: JSON.stringify({
+      username: username,
+      email: email,
+      avatar: avatar,
+      header_image: header_image,
+      bio: bio,
+    }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if ("error" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["error"];
+      } else if ("message" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["message"];
+        console.log(result);
+      }
+    });
 }
