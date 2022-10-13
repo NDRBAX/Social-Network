@@ -7,6 +7,10 @@ from .models import *
 class UserAdmin(admin.ModelAdmin):
     list_display = ("id", "username", "email")
 
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "avatar", "country", "age", "bio")
+
+
 class PostAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "content", "timestamp")
 
@@ -23,3 +27,4 @@ admin.site.register(User, UserAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Like, LikeAdmin)
 admin.site.register(Follow, FollowAdmin)
+admin.site.register(Profile, ProfileAdmin)
