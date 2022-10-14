@@ -7,22 +7,26 @@ class User(AbstractUser):
 
 class Profile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="profile")
+    background_cover = models.CharField(max_length=1000, default="https://images.unsplash.com/photo-1664199134378-459f80ded70c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1216&q=80")
     avatar = models.CharField(max_length=500, default="https://cdn-icons-png.flaticon.com/512/3177/3177440.png",)    
     country = models.CharField(max_length=200, default="USA")
     age = models.IntegerField(default=0)
     bio = models.CharField(max_length=200, default="")
+    followers = models.ManyToManyField(User, related_name="followers", blank=True)
+    following = models.ManyToManyField(User, related_name="following", blank=True)
 
     def __str__(self):
         return f"{self.user}"
-class Follow(models.Model):
-    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="follower")
-    following = models.ManyToManyField(User, related_name="following", blank=True)
+# class Follow(models.Model):
+#     follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="follower")
+#     following = models.ManyToManyField(User, related_name="following", blank=True)
+    
 
-    def serialize(self):
-        return {
-            "follower": self.follower.username,
-            "following": [user.username for user in self.following.all()]
-        }
+#     def serialize(self):
+#         return {
+#             "follower": self.follower.username,
+#             "following": [user.username for user in self.following.all()]
+#         }
 class Like(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
     post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="post")
