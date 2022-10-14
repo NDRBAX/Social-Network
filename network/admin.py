@@ -8,7 +8,13 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ("id", "username", "email")
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "avatar", "country", "age", "bio")
+    list_display = ("id", "user", "avatar", "country", "age", "bio", "followers", "following")
+
+    def followers(self, obj):
+        return obj.followers.all()
+    
+    def following(self, obj):
+        return obj.following.all()
 
 
 class PostAdmin(admin.ModelAdmin):
@@ -17,14 +23,14 @@ class PostAdmin(admin.ModelAdmin):
 class LikeAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "post")
 
-class FollowAdmin(admin.ModelAdmin):
-    list_display = ("id", "follower", "following")
+# class FollowAdmin(admin.ModelAdmin):
+#     list_display = ("id", "follower", "following")
 
-    def following(self, obj):
-        return obj.following.all()
+#     def following(self, obj):
+#         return obj.following.all()
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Like, LikeAdmin)
-admin.site.register(Follow, FollowAdmin)
+# admin.site.register(Follow, FollowAdmin)
 admin.site.register(Profile, ProfileAdmin)
