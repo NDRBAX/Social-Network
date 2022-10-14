@@ -5,33 +5,159 @@
     <div class="row justify-content-center">
 
         <div id="show-alert"></div>
+        
+        <!-- PROFILE SECTION -->
+        <div id="profile-section">
+          <div class="bg-white shadow rounded overflow-hidden mb-4">
+            <div class="profile-header">
 
+               <div id="profile-cover" class="profile-cover" style="background-image:url({{ profile.background_cover }})"></div>
+
+               <div class="profile-content">
+
+                  <div class="profile-avatar">
+                     <img src="{{profile.avatar}}" alt="">
+                  </div>
+
+                  <div class="row justify-content-between">
+                    <div class="col px-4 pt-5">
+                      <h4 class="pt-2">{{ user.username }}</h4>
+                      <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i>{{ profile.country }}</p>
+                    </div>
+
+                    <div class="col text-end ps-3 pe-0">
+                      <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                        Edit Profile
+                      </button>
+                    </div>
+
+                  </div>
+
+               </div>
+
+               
+               <!-- Modal -->
+              <div class="modal fade " id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog  modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h1 class="modal-title fs-5" id="staticBackdropLabel">Edit your profile </h1>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="edit-profile-form">
+                      <div class="modal-body">
+                        <div class="mb-3">
+                          <label for="recipient-name" class="col-form-label">Avatar:</label>
+                          <input type="text" class="form-control" id="avatar" value="{{ profile.avatar }}">
+                        </div>
+                        <div class="mb-3">
+                          <label for="recipient-name" class="col-form-label">Background cover:</label>
+                          <input type="text" class="form-control" id="background-cover" value="{{ profile.background_cover }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="recipient-name" class="col-form-label">Country:</label>
+                            <input type="text" class="form-control" id="country" value="{{ profile.country }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="recipient-name" class="col-form-label">Age:</label>
+                            <input type="text" class="form-control" id="age" value="{{ profile.age }}">
+                        </div>
+                        <div class="mb-3">
+                          <label for="message-text" class="col-form-label">Bio:</label>
+                          <textarea class="form-control" id="bio">{{ profile.bio }}</textarea>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                      </div>
+                  </form>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <div class="bg-light pt-3 p-4 d-flex justify-content-center text-center">
+              <ul class="list-inline mb-0">
+                  <li class="list-inline-item me-5">
+                      <h5 class="font-weight-bold mb-0 d-block"> <i
+                        class="fa-solid fa-book me-2"></i>{{num_posts}}</h5><small class="text-muted">Posts</small>
+                  </li>
+                  <li class="list-inline-item me-5">
+                      <h5 class="font-weight-bold mb-0 d-block"><i
+                        class="fas fa-user me-2"></i>{{num_followers}}</h5><small class="text-muted"> Followers</small>
+                  </li>
+                  <li class="list-inline-item">
+                      <h5 class="font-weight-bold mb-0 d-block"> <i
+                        class="fas fa-user me-2"></i>{{num_following}}</h5><small class="text-muted">Following</small>
+                  </li>
+              </ul>
+          </div>
+
+
+          <div class="px-4 py-2">
+              <h5 class="mb-3 mt-1 text-center">About</h5>
+              <div class="p-4 mb-3 text-center rounded shadow-sm bg-light">
+                <p>Hi, I'm {{ user.username }}. I'm {{ profile.age }} years old. I've joined this awesome social network at {{ user.date_joined }}</p>
+                <p>{{ profile.bio }}</p>
+              </div>
+          </div>
+         </div>
+
+        </div>
+
+        <!-- ALL POSTS SECTION -->
+        <div id="all-posts-section">
+            <h1>Lasts posts</h1>
+        </div>
+
+        <!-- FOLLOWING SECTION -->
+        <div id="following-section">
+            <h3>Following</h3>
+        </div>
+
+                <!-- USER PROFILE SECTION -->
+                <div id="user-profile-section">
+                  <h3>User profile</h3>
+              </div>
+
+        <!-- NEW POST -->
         <div id="new-post-section">
             <h3>Make a new post</h3>
 
             <form id="new-post-form">
                 <div class="form-group">
-                    <textarea class="form-control" id="new-post-content" rows="3" placeholder="What's on your mind?"></textarea>
+                    <textarea class="form-control " id="new-post-content" rows="3" placeholder="What's on your mind?"></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary mt-2">Post</button>
+          
+
+                  <button type="submit" class="btn btn-primary mt-2 mb-3 text-end">Post</button>
+    
+                
             </form>
         </div>
 
-        {% comment %} <div id="profile-section">Profile</div>
-        <div id="all-posts-section">All post</div>
-        <div id="following-section">Following</div> {% endcomment %}
+        <!-- POSTS -->
+        <div id="posts" class="mt-4"></div>
 
-        <div id="all-posts-section">
-            <h3>All Posts</h3>
+        <!-- PAGINATION -->
+        <div id="pagination">
+            <div class="row mt-5 mb-5">
+                <div class="col-1">
+                  <button class="btn btn-primary" id="previous">Previous</button>
+                </div>
+                <div class="col-10 text-center">
+                  <p id="page-number"></p>
+                </div>
+                <div class="col-1">
+                  <button class="btn btn-primary" id="next">Next</button>
+                </div>
+            </div>
         </div>
 
-        <div id="following-section">
-            <h3>Following</h3>
-        </div>
 
-        <div id="profile-section">
-            <h3>Profile</h3>
-        </div>
+
+        
 
 
         
@@ -41,4 +167,5 @@
 
 {% block script %}
     <script src="{% static 'network/index.js' %}"></script>
+
 {% endblock %}
