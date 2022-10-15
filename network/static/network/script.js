@@ -11,6 +11,10 @@ function clear() {
     document.querySelectorAll("#post").forEach((post) => {
       post.remove();
     });
+
+    document
+      .querySelector("#posts")
+      .removeChild(document.querySelector("#empty-posts"));
     console.log("cleared");
     document.querySelector("#show-alert").style.display = "none";
   } catch (error) {
@@ -58,19 +62,21 @@ function showSection(section) {
       document.querySelector(`#${section}`).style.display = "block";
       document.querySelector("#all-posts-section").style.display = "none";
       document.querySelector("#following-section").style.display = "none";
+      document.querySelector("#user-profile-section").style.display = "none";
 
       document.querySelector("#posts").style.display = "block";
-      document.querySelector("#pagination").style.display = "block";
-      document.querySelector("#new-post-section").style.display = "block";
+      document.querySelector("#pagination").style.display = "none";
+      document.querySelector("#new-post-section").style.display = "none";
 
       fetch_posts(section);
     } else if (section === "all-posts-section") {
       document.querySelector(`#${section}`).style.display = "block";
       document.querySelector("#profile-section").style.display = "none";
       document.querySelector("#following-section").style.display = "none";
+      document.querySelector("#user-profile-section").style.display = "none";
 
       document.querySelector("#posts").style.display = "block";
-      document.querySelector("#pagination").style.display = "block";
+      document.querySelector("#pagination").style.display = "none";
       document.querySelector("#new-post-section").style.display = "block";
 
       fetch_posts(section);
@@ -79,9 +85,11 @@ function showSection(section) {
 
       document.querySelector("#profile-section").style.display = "none";
       document.querySelector("#all-posts-section").style.display = "none";
-      document.querySelector("#posts").style.display = "none";
+      document.querySelector("#posts").style.display = "block";
       document.querySelector("#pagination").style.display = "none";
       document.querySelector("#new-post-section").style.display = "none";
+      document.querySelector("#user-profile-section").style.display = "none";
+      fetch_posts(section);
     }
   } catch (error) {
     console.log(error);
@@ -101,18 +109,30 @@ function show_posts(posts, page, posts_per_page) {
     if (posts.length === 0) {
       document.querySelector(
         "#posts"
-      ).innerHTML = `<div class="alert alert-info" role="alert">No posts yet.</div>`;
+      ).innerHTML = ` <div class="row h-100" id="empty-posts">
+      <div class="col-md-12 my-auto mt-5" >
+          <img class="img-responsive center-block d-block mx-auto mb-2" id="empty" src="" alt="empty" width="10%">
+          <h5 class="text-comment text-center"><strong>No posts yet</strong> 
+            
+          </h5>
+      </div>
+     </div>`;
+      document.querySelector("#empty").src =
+        "/static/network/assets/post-it.png";
     } else {
       posts_to_show.forEach((post) => {
         const post_div = document.createElement("div");
-        post_div.setAttribute("class", "post card mb-3");
+        post_div.setAttribute(
+          "class",
+          "post card mb-3 shadow border-0 rounded-0"
+        );
         post_div.setAttribute("id", "post");
         post_div.innerHTML = `
         <div class="card-body">
           <div class="row justify-content-between">
-            <div class="col-6 d-flex inline-block">
-              <img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30">
-              <h5 class="card-title">${post.user}</h5>
+            <div class="col-6 ">
+              <a id="username" href="" class="d-flex inline-block"><img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30"><h5 class="card-title">${post.user}</h5>
+              </a>
             </div>
             <div class="col-6 text-end">
               <p class="card-text"><small class="text-muted">${post.timestamp}</small></p>
@@ -145,31 +165,37 @@ function show_posts(posts, page, posts_per_page) {
         document.querySelector("#posts").append(post_div);
       });
 
-      document.querySelector(
-        "#page-number"
-      ).innerHTML = `${page} of ${total_pages}`;
+      if (posts.length > posts_per_page) {
+        document.querySelector("#pagination").style.display = "block";
 
-      document.querySelector("#next").onclick = () => {
-        if (page < total_pages) {
-          page++;
-          clear();
-          show_posts(posts, page, posts_per_page);
-          document.querySelector(
-            "#page-number"
-          ).innerHTML = `${page} of ${total_pages}`;
-        }
-      };
+        document.querySelector(
+          "#page-number"
+        ).innerHTML = `${page} of ${total_pages}`;
 
-      document.querySelector("#previous").onclick = () => {
-        if (page > 1) {
-          page--;
-          clear();
-          show_posts(posts, page, posts_per_page);
-          document.querySelector(
-            "#page-number"
-          ).innerHTML = `${page} of ${total_pages}`;
-        }
-      };
+        document.querySelector("#next").onclick = () => {
+          if (page < total_pages) {
+            page++;
+            clear();
+            show_posts(posts, page, posts_per_page);
+            document.querySelector(
+              "#page-number"
+            ).innerHTML = `${page} of ${total_pages}`;
+          }
+        };
+
+        document.querySelector("#previous").onclick = () => {
+          if (page > 1) {
+            page--;
+            clear();
+            show_posts(posts, page, posts_per_page);
+            document.querySelector(
+              "#page-number"
+            ).innerHTML = `${page} of ${total_pages}`;
+          }
+        };
+      } else {
+        document.querySelector("#pagination").style.display = "none";
+      }
     }
   } catch (error) {
     console.log(error);
@@ -230,23 +256,28 @@ function post_button(event, section) {
   history.pushState({ section }, section, section);
 }
 
-// edit profile via modal form
+// edit profile
 function edit_profile(event) {
   event.preventDefault();
 
-  const username = document.querySelector("#username").value;
-  const email = document.querySelector("#email").value;
   const avatar = document.querySelector("#avatar").value;
-  const header_image = document.querySelector("#header-image").value;
+  console.log(avatar);
+  const country = document.querySelector("#country").value;
+  console.log(country);
+  const age = document.querySelector("#age").value;
+  console.log(age);
   const bio = document.querySelector("#bio").value;
+  console.log(bio);
+  const cover = document.querySelector("#background-cover").value;
+  console.log(cover);
 
   fetch("/edit-profile", {
     method: "Put",
     body: JSON.stringify({
-      username: username,
-      email: email,
       avatar: avatar,
-      header_image: header_image,
+      background_cover: cover,
+      country: country,
+      age: age,
       bio: bio,
     }),
   })
@@ -262,3 +293,11 @@ function edit_profile(event) {
       }
     });
 }
+
+// show profile
+// async function show_profile(event, username) {
+//   try {
+//   } catch (error) {
+//     console.log(error);
+//   }
+// }
