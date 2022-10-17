@@ -15,18 +15,19 @@ class Profile(models.Model):
     followers = models.ManyToManyField(User, related_name="followers", blank=True)
     following = models.ManyToManyField(User, related_name="following", blank=True)
 
-    def __str__(self):
-        return f"{self.user}"
-# class Follow(models.Model):
-#     follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="follower")
-#     following = models.ManyToManyField(User, related_name="following", blank=True)
-    
+    def seralize(self):
+        return {
+            "id": self.id,
+            "user": self.user.username,
+            "background_cover": self.background_cover,
+            "avatar": self.avatar,
+            "country": self.country,
+            "age": self.age,
+            "bio": self.bio,
+            "followers": [follower.username for follower in self.followers.all()],
+            "following": [following.username for following in self.following.all()]
+        }
 
-#     def serialize(self):
-#         return {
-#             "follower": self.follower.username,
-#             "following": [user.username for user in self.following.all()]
-#         }
 class Like(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user")
     post = models.ForeignKey("Post", on_delete=models.CASCADE, related_name="post")
