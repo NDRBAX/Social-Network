@@ -17,6 +17,7 @@ function clear() {
       .removeChild(document.querySelector("#empty-posts"));
     console.log("cleared");
     document.querySelector("#show-alert").style.display = "none";
+    document.querySelector("#profile-section").style.display = "none";
   } catch (error) {
     console.log(error);
   }
@@ -60,20 +61,23 @@ function showSection(section) {
   try {
     if (section === "profile-section") {
       document.querySelector(`#${section}`).style.display = "block";
+      document.querySelector("#posts").style.display = "block";
+
+      document.querySelector("#edit-profile").innerHTML = `
+      <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+      Edit Profile
+      </button>
+      `;
+
       document.querySelector("#all-posts-section").style.display = "none";
       document.querySelector("#following-section").style.display = "none";
-      document.querySelector("#user-profile-section").style.display = "none";
-
-      document.querySelector("#posts").style.display = "block";
       document.querySelector("#pagination").style.display = "none";
       document.querySelector("#new-post-section").style.display = "none";
-
       fetch_posts(section);
     } else if (section === "all-posts-section") {
       document.querySelector(`#${section}`).style.display = "block";
       document.querySelector("#profile-section").style.display = "none";
       document.querySelector("#following-section").style.display = "none";
-      document.querySelector("#user-profile-section").style.display = "none";
 
       document.querySelector("#posts").style.display = "block";
       document.querySelector("#pagination").style.display = "none";
@@ -88,7 +92,7 @@ function showSection(section) {
       document.querySelector("#posts").style.display = "block";
       document.querySelector("#pagination").style.display = "none";
       document.querySelector("#new-post-section").style.display = "none";
-      document.querySelector("#user-profile-section").style.display = "none";
+
       fetch_posts(section);
     }
   } catch (error) {
@@ -131,7 +135,7 @@ function show_posts(posts, page, posts_per_page) {
         <div class="card-body">
           <div class="row justify-content-between">
             <div class="col-6 ">
-              <a id="username" href="" class="d-flex inline-block"><img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30"><h5 class="card-title">${post.user}</h5>
+              <a class="d-flex inline-block"><img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30"><h5 id="username" class="card-title">${post.user}</h5>
               </a>
             </div>
             <div class="col-6 text-end">
@@ -145,9 +149,7 @@ function show_posts(posts, page, posts_per_page) {
               <a class="me-3" onclick="like_post('${post.id}')">
                 <i class="fas fa-thumbs-up"></i> Like
               </a>
-              <a class="me-3" onclick="unlike_post('${post.id}')">
-                <i class="fas fa-thumbs-down"></i> Unlike
-              </a>
+
               <a class="me-3"  onclick="edit_post('${post.id}')">
                 <i class="fas fa-edit"></i> Edit
               </a>
@@ -162,7 +164,18 @@ function show_posts(posts, page, posts_per_page) {
         
       </div>
     `;
+
         document.querySelector("#posts").append(post_div);
+      });
+
+      document.querySelectorAll("#username").forEach((username) => {
+        username.addEventListener("click", (e) => {
+          e.preventDefault();
+          const user_name = username.innerHTML;
+          console.log(user_name);
+          showSection("profile-section");
+          showUserProfile(user_name);
+        });
       });
 
       if (posts.length > posts_per_page) {
@@ -295,9 +308,51 @@ function edit_profile(event) {
 }
 
 // show profile
-// async function show_profile(event, username) {
-//   try {
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }
+function showUserProfile(username) {
+  fetch(`/profile/${username}`)
+    .then((response) => response.json())
+    .then((result) => {
+      console.log("clicked");
+      console.log(result);
+
+      document.querySelector("#username-profile").innerHTML = result["user"];
+      document.querySelector("#country-profile").innerHTML = `
+      <i class="fas fa-map-marker-alt me-2"></i>${result.country}`;
+
+      document.querySelector("#profile-avatar").src = result["avatar"];
+      document.querySelector(
+        "#profile-cover"
+      ).style.backgroundImage = `url(${result.background_cover})`;
+
+      console.log(result.posts.length);
+      document.querySelector("#num-posts").innerHTML = `
+        <i class="fa-solid fa-book me-2"></i>${result.posts.length}
+      `;
+
+      document.querySelector("#num-followers").innerHTML = `
+        <i class="fas fa-user me-2"></i>${result.followers}
+      `;
+
+      document.querySelector("#num-following").innerHTML = `
+        <i class="fas fa-user me-2"></i>${result.following}
+      `;
+
+      document.querySelector("#profile-bio").innerHTML = `
+        <p>Hi, I'm ${result.user}. I'm ${result.age} years old. I've joined this awesome social network at ${result.joined}</p>
+        <p>${result.bio}</p>`;
+
+      show_posts(result.posts, 1, 10);
+
+      // hide edit profile button if not the current user
+      let current_user = document.querySelector("#profile-username").innerHTML;
+      if (current_user == result.user) {
+        document.querySelector("#edit-profile").innerHTML = `
+        <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+        Edit Profile
+        </button>
+        `;
+      } else {
+        document.querySelector("#edit-profile").innerHTML = "";
+      }
+    });
+}
