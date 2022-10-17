@@ -17,6 +17,8 @@ urlpatterns = [
     path("follow-user/<str:username>", views.follow_user, name="follow-user"),
     # edit profile
     path("edit-profile", views.edit_profile, name="edit-profile"),
+    # profile
+    path("profile/<str:username>", views.user_profile, name="profile"),
 
 
     
