@@ -1,11 +1,6 @@
-window.onpopstate = function (event) {
-  if (event.state) {
-    console.log(event.state.section);
-    clear();
-    showSection(event.state.section);
-  }
-};
+// ! GO BACK AND FORWARD NAVIGATION
 
+// ! CLEAR THE PAGE
 function clear() {
   try {
     document.querySelectorAll("#post").forEach((post) => {
@@ -15,20 +10,29 @@ function clear() {
     document
       .querySelector("#posts")
       .removeChild(document.querySelector("#empty-posts"));
+
     console.log("cleared");
     document.querySelector("#show-alert").style.display = "none";
-    document.querySelector("#profile-section").style.display = "none";
   } catch (error) {
     console.log(error);
   }
 }
 
+//  ! EVENT LISTENERS ON LOAD
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".nav-link").forEach((link) => {
     link.onclick = () => {
+      console.log(`---- BEFORE ---- url is ${window.location.href}`);
       const section = link.dataset.section;
-      showSection(section);
-      history.pushState({ section: section }, section, `/#${section}`);
+      if (section === "profile-section") {
+        const username = document.querySelector("#profile-username").innerHTML;
+        showSection(section);
+        showUserProfile(username);
+        history.pushState({ section: section }, "", `#user/${username}`);
+      } else {
+        showSection(section);
+        history.pushState({ section: section }, section, `/#${section}`);
+      }
     };
   });
 
@@ -38,69 +42,168 @@ document.addEventListener("DOMContentLoaded", () => {
   refresh();
 });
 
+// ! REFRESH THE PAGE
 function refresh() {
   const url = window.location.href;
-  console.log(url);
   const section = url.split("#")[1];
   console.log("refreshed");
   if (section === undefined) {
     showSection("all-posts-section");
   } else {
-    if (section.includes("profile")) {
-      showSection("profile-section");
-    } else if (section.includes("all-posts")) {
+    // if (section.includes("profile")) {
+    //   showSection("profile-section");
+    //   showCurrentUserProfile();
+    // } else
+    if (section.includes("all-posts")) {
       showSection("all-posts-section");
     } else if (section.includes("following")) {
       showSection("following-section");
+    } else if (section.includes("user/")) {
+      const username = section.split("/")[1];
+      showSection("profile-section");
+      showUserProfile(username);
     }
   }
 }
 
-// Show the section with the given name
+// ? SHOW THE SECTION
 function showSection(section) {
   try {
     if (section === "profile-section") {
       document.querySelector(`#${section}`).style.display = "block";
       document.querySelector("#posts").style.display = "block";
 
+      document.querySelector("#all-posts-section").style.display = "none";
+      document.querySelector("#following-section").style.display = "none";
+      document.querySelector("#pagination").style.display = "none";
+      document.querySelector("#new-post-section").style.display = "none";
+
       document.querySelector("#edit-profile").innerHTML = `
       <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
       Edit Profile
       </button>
       `;
-
-      document.querySelector("#all-posts-section").style.display = "none";
-      document.querySelector("#following-section").style.display = "none";
-      document.querySelector("#pagination").style.display = "none";
-      document.querySelector("#new-post-section").style.display = "none";
-      fetch_posts(section);
     } else if (section === "all-posts-section") {
       document.querySelector(`#${section}`).style.display = "block";
+      document.querySelector("#new-post-section").style.display = "block";
+      document.querySelector("#posts").style.display = "block";
+
+      document.querySelector("#pagination").style.display = "none";
       document.querySelector("#profile-section").style.display = "none";
       document.querySelector("#following-section").style.display = "none";
-
-      document.querySelector("#posts").style.display = "block";
-      document.querySelector("#pagination").style.display = "none";
-      document.querySelector("#new-post-section").style.display = "block";
 
       fetch_posts(section);
     } else if (section === "following-section") {
       document.querySelector(`#${section}`).style.display = "block";
+      document.querySelector("#posts").style.display = "block";
 
       document.querySelector("#profile-section").style.display = "none";
       document.querySelector("#all-posts-section").style.display = "none";
-      document.querySelector("#posts").style.display = "block";
       document.querySelector("#pagination").style.display = "none";
       document.querySelector("#new-post-section").style.display = "none";
 
       fetch_posts(section);
     }
+    console.log(`showing ${section}`);
   } catch (error) {
     console.log(error);
   }
 }
 
-// show posts
+// ? SHOW THE CURRENT USER PROFILE
+function showCurrentUserProfile() {
+  const username = document.querySelector("#profile-username").innerHTML;
+  showUserProfile(username);
+}
+
+// ? SHOW USER PROFILE
+function showUserProfile(username) {
+  fetch(`/profile/${username}`)
+    .then((response) => response.json())
+    .then((result) => {
+      document.querySelector("#username-profile").innerHTML = result["user"];
+      document.querySelector("#country-profile").innerHTML = `
+      <i class="fas fa-map-marker-alt me-2"></i>${result.country}`;
+
+      document.querySelector("#profile-avatar").src = result["avatar"];
+      document.querySelector(
+        "#profile-cover"
+      ).style.backgroundImage = `url(${result.background_cover})`;
+
+      document.querySelector("#num-posts").innerHTML = `
+        <i class="fa-solid fa-book me-2"></i>${result.posts.length}
+      `;
+
+      document.querySelector("#num-followers").innerHTML = `
+        <i class="fas fa-user me-2"></i>${result.followers}
+      `;
+
+      document.querySelector("#num-following").innerHTML = `
+        <i class="fas fa-user me-2"></i>${result.following}
+      `;
+
+      document.querySelector("#profile-bio").innerHTML = `
+        <p>Hi, I'm ${result.user}. I'm ${result.age} years old. I've joined this awesome social network at ${result.joined}</p>
+        <p>${result.bio}</p>`;
+
+      show_posts(result.posts, 1, 10);
+
+      // hide edit profile button if not the current user
+      let current_user = document.querySelector("#profile-username").innerHTML;
+      if (current_user == result.user) {
+        document.querySelector("#edit-profile").innerHTML = `
+        <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+        Edit Profile
+        </button>
+        `;
+      } else {
+        document.querySelector("#edit-profile").innerHTML = "";
+      }
+    })
+    .catch((error) => {
+      console.log("Error:", error);
+    });
+}
+
+// ? EDIT PROFILE
+function edit_profile(event) {
+  event.preventDefault();
+
+  const avatar = document.querySelector("#avatar").value;
+  console.log(avatar);
+  const country = document.querySelector("#country").value;
+  console.log(country);
+  const age = document.querySelector("#age").value;
+  console.log(age);
+  const bio = document.querySelector("#bio").value;
+  console.log(bio);
+  const cover = document.querySelector("#background-cover").value;
+  console.log(cover);
+
+  fetch("/edit-profile", {
+    method: "Put",
+    body: JSON.stringify({
+      avatar: avatar,
+      background_cover: cover,
+      country: country,
+      age: age,
+      bio: bio,
+    }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if ("error" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["error"];
+      } else if ("message" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["message"];
+        console.log(result);
+      }
+    });
+}
+
+// * SHOW POSTS
 function show_posts(posts, page, posts_per_page) {
   try {
     let total_pages = Math.ceil(posts.length / posts_per_page);
@@ -171,10 +274,13 @@ function show_posts(posts, page, posts_per_page) {
       document.querySelectorAll("#username").forEach((username) => {
         username.addEventListener("click", (e) => {
           e.preventDefault();
+          console.log("click");
           const user_name = username.innerHTML;
           console.log(user_name);
+          clear();
           showSection("profile-section");
           showUserProfile(user_name);
+          history.pushState(null, null, `#user/${user_name}`);
         });
       });
 
@@ -215,11 +321,11 @@ function show_posts(posts, page, posts_per_page) {
   }
 }
 
+// * FETCH POSTS
 async function fetch_posts(name) {
   try {
     const response = await fetch(`/network/${name}`);
     const posts = await response.json();
-    console.log(posts);
 
     let page = 1;
     let posts_per_page = 10;
@@ -230,7 +336,7 @@ async function fetch_posts(name) {
   }
 }
 
-// make a new post
+// * NEW POST
 function new_post(event) {
   event.preventDefault();
 
@@ -253,10 +359,13 @@ function new_post(event) {
         document.querySelector("#show-alert").innerHTML = result["message"];
         console.log(content);
       }
+    })
+    .catch((error) => {
+      console.log("Error:", error);
     });
 }
 
-// post button
+// * SEND A NEW POST
 function post_button(event, section) {
   new_post(event);
   clear();
@@ -267,92 +376,4 @@ function post_button(event, section) {
     showSection("all-posts-section");
   }
   history.pushState({ section }, section, section);
-}
-
-// edit profile
-function edit_profile(event) {
-  event.preventDefault();
-
-  const avatar = document.querySelector("#avatar").value;
-  console.log(avatar);
-  const country = document.querySelector("#country").value;
-  console.log(country);
-  const age = document.querySelector("#age").value;
-  console.log(age);
-  const bio = document.querySelector("#bio").value;
-  console.log(bio);
-  const cover = document.querySelector("#background-cover").value;
-  console.log(cover);
-
-  fetch("/edit-profile", {
-    method: "Put",
-    body: JSON.stringify({
-      avatar: avatar,
-      background_cover: cover,
-      country: country,
-      age: age,
-      bio: bio,
-    }),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if ("error" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["error"];
-      } else if ("message" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["message"];
-        console.log(result);
-      }
-    });
-}
-
-// show profile
-function showUserProfile(username) {
-  fetch(`/profile/${username}`)
-    .then((response) => response.json())
-    .then((result) => {
-      console.log("clicked");
-      console.log(result);
-
-      document.querySelector("#username-profile").innerHTML = result["user"];
-      document.querySelector("#country-profile").innerHTML = `
-      <i class="fas fa-map-marker-alt me-2"></i>${result.country}`;
-
-      document.querySelector("#profile-avatar").src = result["avatar"];
-      document.querySelector(
-        "#profile-cover"
-      ).style.backgroundImage = `url(${result.background_cover})`;
-
-      console.log(result.posts.length);
-      document.querySelector("#num-posts").innerHTML = `
-        <i class="fa-solid fa-book me-2"></i>${result.posts.length}
-      `;
-
-      document.querySelector("#num-followers").innerHTML = `
-        <i class="fas fa-user me-2"></i>${result.followers}
-      `;
-
-      document.querySelector("#num-following").innerHTML = `
-        <i class="fas fa-user me-2"></i>${result.following}
-      `;
-
-      document.querySelector("#profile-bio").innerHTML = `
-        <p>Hi, I'm ${result.user}. I'm ${result.age} years old. I've joined this awesome social network at ${result.joined}</p>
-        <p>${result.bio}</p>`;
-
-      show_posts(result.posts, 1, 10);
-
-      // hide edit profile button if not the current user
-      let current_user = document.querySelector("#profile-username").innerHTML;
-      if (current_user == result.user) {
-        document.querySelector("#edit-profile").innerHTML = `
-        <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-        Edit Profile
-        </button>
-        `;
-      } else {
-        document.querySelector("#edit-profile").innerHTML = "";
-      }
-    });
 }
