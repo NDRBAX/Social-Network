@@ -24,7 +24,7 @@ function clear() {
       .removeChild(document.querySelector("#empty-posts"));
 
     console.log("cleared");
-    document.querySelector("#show-alert").style.display = "none";
+    document.querySelector("#show-alert").innerHTML = "";
   } catch (error) {
     console.log(error);
   }
@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".nav-link").forEach((link) => {
     link.onclick = () => {
       const section = link.dataset.section;
+      clear();
       if (section === "profile-section") {
         const username = document.querySelector("#profile-username").innerHTML;
         showUserProfile(username);
@@ -88,7 +89,7 @@ function showSection(section) {
       document.querySelector("#pagination").style.display = "none";
       document.querySelector("#new-post-section").style.display = "none";
 
-      document.querySelector("#edit-profile").innerHTML = `
+      document.querySelector("#info-profile").innerHTML = `
       <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
       Edit Profile
       </button>
@@ -128,51 +129,88 @@ function showUser(username) {
 // ? SHOW USER PROFILE
 function showUserProfile(username) {
   showSection("profile-section");
-  fetch(`/profile/${username}`)
-    .then((response) => response.json())
-    .then((result) => {
-      document.querySelector("#username-profile").innerHTML = result["user"];
-      document.querySelector("#country-profile").innerHTML = `
-      <i class="fas fa-map-marker-alt me-2"></i>${result.country}`;
+  let current_user = document.querySelector("#profile-username").innerHTML;
+  console.log(current_user);
 
-      document.querySelector("#profile-avatar").src = result["avatar"];
-      document.querySelector(
-        "#profile-cover"
-      ).style.backgroundImage = `url(${result.background_cover})`;
+  fetch_profile(current_user, username).then((result) => {
+    document.querySelector("#username-profile").innerHTML =
+      result.username["user"];
+    document.querySelector("#country-profile").innerHTML = `
+      <i class="fas fa-map-marker-alt me-2"></i>${result.username.country}`;
 
-      document.querySelector("#num-posts").innerHTML = `
-        <i class="fa-solid fa-book me-2"></i>${result.posts.length}
+    document.querySelector("#profile-avatar").src = result.username["avatar"];
+    document.querySelector(
+      "#profile-cover"
+    ).style.backgroundImage = `url(${result.username.background_cover})`;
+
+    document.querySelector("#num-posts").innerHTML = `
+        <i class="fa-solid fa-book me-2"></i>${result.username.posts.length}
       `;
 
-      document.querySelector("#num-followers").innerHTML = `
-        <i class="fas fa-user me-2"></i>${result.followers}
+    document.querySelector("#num-followers").innerHTML = `
+        <i class="fas fa-user me-2"></i>${result.username.followers}
       `;
 
-      document.querySelector("#num-following").innerHTML = `
-        <i class="fas fa-user me-2"></i>${result.following}
+    document.querySelector("#num-following").innerHTML = `
+        <i class="fas fa-user me-2"></i>${result.username.following}
       `;
 
-      document.querySelector("#profile-bio").innerHTML = `
-        <p>Hi, I'm ${result.user}. I'm ${result.age} years old. I've joined this awesome social network at ${result.joined}</p>
-        <p>${result.bio}</p>`;
+    document.querySelector("#profile-bio").innerHTML = `
+        <p>Hi, I'm ${result.username.user}. I'm ${result.username.age} years old. I've joined this awesome social network at ${result.username.joined}</p>
+        <p>${result.username.bio}</p>`;
 
-      show_posts(result.posts, 1, 10);
+    show_posts(result.username.posts, 1, 10);
 
-      // hide edit profile button if not the current user
-      let current_user = document.querySelector("#profile-username").innerHTML;
-      if (current_user == result.user) {
-        document.querySelector("#edit-profile").innerHTML = `
-        <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-        Edit Profile
+    if (result.current_user.user === result.username.user) {
+      document.querySelector("#info-profile").innerHTML = `
+      <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+      Edit Profile
+      </button>
+      `;
+    } else {
+      if (result.current_user.following_list.includes(result.username.user)) {
+        document.querySelector("#info-profile").innerHTML = `
+        <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" onclick="follow_user('${result.username.user}')">
+        Unfollow
         </button>
         `;
       } else {
-        document.querySelector("#edit-profile").innerHTML = "";
+        document.querySelector("#info-profile").innerHTML = `
+      <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" onclick="follow_user('${result.username.user}')">
+      Follow
+      </button>
+      `;
       }
-    })
-    .catch((error) => {
-      console.log("Error:", error);
-    });
+    }
+  });
+}
+
+// ? FETCH PROFILE
+async function fetch_profile(current_user, username) {
+  try {
+    if (current_user !== username) {
+      const current_user_response = await fetch(`/profile/${current_user}`);
+      const username_response = await fetch(`/profile/${username}`);
+
+      const current_user_data = await current_user_response.json();
+      const username_data = await username_response.json();
+      console.log(username_data);
+      return {
+        current_user: current_user_data,
+        username: username_data,
+      };
+    } else {
+      const current_user_response = await fetch(`/profile/${current_user}`);
+      const current_user_data = await current_user_response.json();
+      console.log(current_user_data);
+      return {
+        current_user: current_user_data,
+        username: current_user_data,
+      };
+    }
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 // ? EDIT PROFILE
@@ -180,11 +218,8 @@ function edit_profile(event) {
   event.preventDefault();
 
   const avatar = document.querySelector("#avatar").value;
-
   const age = document.querySelector("#age").value;
-
   const bio = document.querySelector("#bio").value;
-
   const cover = document.querySelector("#background-cover").value;
 
   fetch("/edit-profile", {
@@ -241,40 +276,62 @@ function show_posts(posts, page, posts_per_page) {
         );
         post_div.setAttribute("id", "post");
         post_div.innerHTML = `
-        <div class="card-body">
-          <div class="row justify-content-between">
-            <div class="col-6 ">
-              <a onclick="showUser('${post.user}')" data-username="${post.user}" class="d-flex inline-block"><img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30"><h5 id="username" class="card-title">${post.user}</h5>
-              </a>
+          <div class="card-body">
+            <div class="row justify-content-between">
+              <div class="col-6 ">
+                <a onclick="showUser('${post.user}')" data-username="${post.user}" class="d-flex inline-block"><img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30"><h5 id="username" class="card-title">${post.user}</h5>
+                </a>
+              </div>
+              <div class="col-6 text-end">
+                <p class="card-text"><small class="text-muted">${post.timestamp}</small></p>
+              </div>
             </div>
-            <div class="col-6 text-end">
-              <p class="card-text"><small class="text-muted">${post.timestamp}</small></p>
-            </div>
-          </div>
-          <p class="card-text">${post.content}</p>
+            <p class="card-text">${post.content}</p>
 
-          <div class="row justify-content-between">
-            <div class="col">
-              <a class="me-3" onclick="like_post('${post.id}')">
-                <i class="fas fa-thumbs-up"></i> Like
-              </a>
-
-              <a class="me-3"  onclick="edit_post('${post.id}')">
-                <i class="fas fa-edit"></i> Edit
-              </a>
-              <a class="me-3"  onclick="delete_post('${post.id}')">
-                <i class="fas fa-trash-alt"></i> Delete
-              </a>
+            <div class="row justify-content-between">
+              <div id="like-comment-edit-delete" class="col">
+              </div>
+              <div class="col text-end">
+                <p class="card-text"><small class="text-muted">${post.likes} people like this</small></p>
+              </div>
             </div>
-            <div class="col text-end">
-              <p class="card-text"><small class="text-muted">${post.likes} people like this</small></p>
-            </div>
-          </div>
-        
-      </div>
-    `;
+          
+        </div>
+      `;
 
         document.querySelector("#posts").append(post_div);
+      });
+
+      let current_user = document.querySelector("#profile-username").innerHTML;
+      document.querySelectorAll("#like-comment-edit-delete").forEach((div) => {
+        if (
+          div.parentElement.parentElement.querySelector("#username")
+            .innerHTML === current_user
+        ) {
+          div.innerHTML = `
+          <a class="me-3" onclick="like_post('${div.parentElement.parentElement.parentElement.parentElement.id}')">
+            <i class="fas fa-thumbs-up"></i> Like
+          </a>
+          <a class="me-3" onclick="comment_post('${div.parentElement.parentElement.parentElement.parentElement.id}')">
+            <i class="fas fa-comment"></i> Comment
+         </a>
+          <a class="me-3" onclick="edit_post('${div.parentElement.parentElement.parentElement.parentElement.id}')">
+            <i class="fas fa-edit"></i> Edit
+          </a>
+          <a class="me-3" onclick="delete_post('${div.parentElement.parentElement.parentElement.parentElement.id}')">
+            <i class="fas fa-trash"></i> Delete
+          </a>
+          `;
+        } else {
+          div.innerHTML = `
+          <a class="me-3" onclick="like_post('${div.parentElement.parentElement.parentElement.parentElement.id}')">
+            <i class="fas fa-thumbs-up"></i> Like
+          </a>
+          <a class="me-3" onclick="comment_post('${div.parentElement.parentElement.parentElement.parentElement.id}')">
+            <i class="fas fa-comment"></i> Comment
+          </a>
+          `;
+        }
       });
 
       if (posts.length > posts_per_page) {
@@ -369,3 +426,27 @@ function post_button(event, section) {
   }
   history.pushState({ section }, section, section);
 }
+
+// ? FOLLOW A USER
+function follow_user(username) {
+  console.log(`Follow ${username}`);
+  fetch(`/follow-user/${username}`, {
+    method: "PUT",
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if ("error" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["error"];
+      } else if ("message" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["message"];
+        showUserProfile(username);
+      }
+    })
+    .catch((error) => {
+      console.log("Error:", error);
+    });
+}
+
+// ? LIKE A POST
