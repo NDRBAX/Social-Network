@@ -1,4 +1,16 @@
 // ! GO BACK AND FORWARD NAVIGATION
+window.onpopstate = function (event) {
+  if (event.state) {
+    if (event.state.section === "profile-section") {
+      const username = window.location.href.split("/")[4];
+      clear();
+      showUserProfile(username);
+    } else {
+      clear();
+      showSection(event.state.section);
+    }
+  }
+};
 
 // ! CLEAR THE PAGE
 function clear() {
@@ -22,11 +34,9 @@ function clear() {
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".nav-link").forEach((link) => {
     link.onclick = () => {
-      console.log(`---- BEFORE ---- url is ${window.location.href}`);
       const section = link.dataset.section;
       if (section === "profile-section") {
         const username = document.querySelector("#profile-username").innerHTML;
-        showSection(section);
         showUserProfile(username);
         history.pushState({ section: section }, "", `#user/${username}`);
       } else {
@@ -49,18 +59,18 @@ function refresh() {
   console.log("refreshed");
   if (section === undefined) {
     showSection("all-posts-section");
+    history.pushState(
+      { section: "all-posts-section" },
+      "",
+      "/#all-posts-section"
+    );
   } else {
-    // if (section.includes("profile")) {
-    //   showSection("profile-section");
-    //   showCurrentUserProfile();
-    // } else
     if (section.includes("all-posts")) {
       showSection("all-posts-section");
     } else if (section.includes("following")) {
       showSection("following-section");
     } else if (section.includes("user/")) {
       const username = section.split("/")[1];
-      showSection("profile-section");
       showUserProfile(username);
     }
   }
@@ -104,20 +114,20 @@ function showSection(section) {
 
       fetch_posts(section);
     }
-    console.log(`showing ${section}`);
   } catch (error) {
     console.log(error);
   }
 }
 
-// ? SHOW THE CURRENT USER PROFILE
-function showCurrentUserProfile() {
-  const username = document.querySelector("#profile-username").innerHTML;
+//  ? SHOW USER PROFILE FROM POSTS
+function showUser(username) {
   showUserProfile(username);
+  history.pushState({ section: "profile-section" }, "", `#user/${username}`);
 }
 
 // ? SHOW USER PROFILE
 function showUserProfile(username) {
+  showSection("profile-section");
   fetch(`/profile/${username}`)
     .then((response) => response.json())
     .then((result) => {
@@ -170,15 +180,12 @@ function edit_profile(event) {
   event.preventDefault();
 
   const avatar = document.querySelector("#avatar").value;
-  console.log(avatar);
-  const country = document.querySelector("#country").value;
-  console.log(country);
+
   const age = document.querySelector("#age").value;
-  console.log(age);
+
   const bio = document.querySelector("#bio").value;
-  console.log(bio);
+
   const cover = document.querySelector("#background-cover").value;
-  console.log(cover);
 
   fetch("/edit-profile", {
     method: "Put",
@@ -198,7 +205,6 @@ function edit_profile(event) {
       } else if ("message" in result) {
         document.querySelector("#show-alert").style.display = "block";
         document.querySelector("#show-alert").innerHTML = result["message"];
-        console.log(result);
       }
     });
 }
@@ -238,7 +244,7 @@ function show_posts(posts, page, posts_per_page) {
         <div class="card-body">
           <div class="row justify-content-between">
             <div class="col-6 ">
-              <a class="d-flex inline-block"><img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30"><h5 id="username" class="card-title">${post.user}</h5>
+              <a onclick="showUser('${post.user}')" data-username="${post.user}" class="d-flex inline-block"><img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30"><h5 id="username" class="card-title">${post.user}</h5>
               </a>
             </div>
             <div class="col-6 text-end">
@@ -269,19 +275,6 @@ function show_posts(posts, page, posts_per_page) {
     `;
 
         document.querySelector("#posts").append(post_div);
-      });
-
-      document.querySelectorAll("#username").forEach((username) => {
-        username.addEventListener("click", (e) => {
-          e.preventDefault();
-          console.log("click");
-          const user_name = username.innerHTML;
-          console.log(user_name);
-          clear();
-          showSection("profile-section");
-          showUserProfile(user_name);
-          history.pushState(null, null, `#user/${user_name}`);
-        });
       });
 
       if (posts.length > posts_per_page) {
@@ -357,7 +350,6 @@ function new_post(event) {
       } else if ("message" in result) {
         document.querySelector("#show-alert").style.display = "block";
         document.querySelector("#show-alert").innerHTML = result["message"];
-        console.log(content);
       }
     })
     .catch((error) => {
