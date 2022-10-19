@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, Http404, HttpResponseRedirect, JsonResponse
@@ -6,6 +7,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+
+
 
 from .models import *
 
@@ -108,8 +111,6 @@ def section(request, section):
     posts = posts.order_by("-timestamp").all()
     return JsonResponse([post.serialize() for post in posts], safe=False, )
 
-    
-
 # edit profile 
 @csrf_exempt
 @login_required
@@ -189,18 +190,29 @@ def like_post(request, post_id):
         return JsonResponse({"message": "Post liked successfully."}, status=201)
     return JsonResponse({"error": "PUT request required."}, status=400)
 
+@csrf_exempt
 @login_required
 def follow_user(request, username):
     if request.method == "PUT":
-        data = json.loads(request.body)
         user = request.user
-        profile = User.objects.get(username=username)
-        if user in profile.followers.all():
-            profile.followers.remove(user)
+        profile = Profile.objects.get(user=user)
+        user_to_follow = User.objects.get(username=username)
+        if user_to_follow in profile.following.all():
+            profile.following.remove(user_to_follow)
+            profile.save()
+            # remove the user from the followers of the user to follow
+            user_to_follow_profile = Profile.objects.get(user=user_to_follow)
+            user_to_follow_profile.followers.remove(user)
+            user_to_follow_profile.save()
+            return JsonResponse ({"message": "Unfollowed successfully."}, status=201)
         else:
-            profile.followers.add(user)
-        profile.save()
-        return JsonResponse({"message": "User followed successfully."}, status=201)
+            profile.following.add(user_to_follow)
+            profile.save()
+            # add the user to the followers of the user to follow
+            user_to_follow_profile = Profile.objects.get(user=user_to_follow)
+            user_to_follow_profile.followers.add(user)
+            user_to_follow_profile.save()
+            return JsonResponse({"message": "User followed successfully."}, status=201)
     return JsonResponse({"error": "PUT request required."}, status=400)
 
 
@@ -211,7 +223,12 @@ def user_profile(request, username):
         user = User.objects.get(username=username)
         profile = Profile.objects.get(user=user)
         posts = Post.objects.filter(user=user).all().order_by("-timestamp")
-        print(posts)
+
+        # calculate since when the user is a member
+        now = datetime.now()
+
+
+
         return JsonResponse({
             "user": user.username, 
             "avatar": profile.avatar, 
@@ -221,5 +238,9 @@ def user_profile(request, username):
             "bio": profile.bio,
             "followers": profile.followers.count(),
             "following": profile.following.count(),
-            "joined": user.date_joined,
+            "followers_list": [follower.username for follower in profile.followers.all()],
+            "following_list": [following.username for following in profile.following.all()],
+            "joined": user.date_joined.strftime(f"%b. %d, %Y, %I:%M %p"),
             "posts": [post.serialize() for post in posts]}, safe=False, status=201)
+        
+        
