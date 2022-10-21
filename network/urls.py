@@ -19,6 +19,11 @@ urlpatterns = [
     path("edit-profile", views.edit_profile, name="edit-profile"),
     # profile
     path("profile/<str:username>", views.user_profile, name="profile"),
+    # comments
+    path("comments/<int:post_id>", views.new_comment, name="comments"),
+    # get comments
+    path("get-comments/<int:post_id>", views.get_comments, name="get-comments"),
+
 
 
     
