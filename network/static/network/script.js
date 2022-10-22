@@ -15,7 +15,7 @@ window.onpopstate = function (event) {
 // ! CLEAR THE PAGE
 function clear() {
   try {
-    document.querySelectorAll("#post").forEach((post) => {
+    document.querySelectorAll("#accordion-card").forEach((post) => {
       post.remove();
     });
 
@@ -77,6 +77,28 @@ function refresh() {
   }
 }
 
+// ! DISPLAY THE CHARACTERS LEFT
+function characters_left(textarea, display) {
+  const max_length = 300;
+  const characters_left = max_length - textarea.value.length;
+
+  if (max_length === characters_left) {
+    document.querySelector(`#${display}`).innerHTML = "";
+  } else {
+    document.querySelector(
+      `#${display}`
+    ).innerHTML = `<small class="text-muted "><strong>${characters_left}</strong> characters left</small>`;
+
+    if (characters_left < 50) {
+      document.querySelector(`#${display}`).style.color = "red";
+    } else if (characters_left < 70) {
+      document.querySelector(`#${display}`).style.color = "orange";
+    } else {
+      document.querySelector(`#${display}`).style.color = "black";
+    }
+  }
+}
+
 // ? SHOW THE SECTION
 function showSection(section) {
   try {
@@ -132,7 +154,6 @@ function showUserProfile(username) {
   let current_user = document.querySelector("#profile-username").innerHTML;
 
   fetch_profile(current_user, username).then((result) => {
-    console.log(result);
     document.querySelector("#username-profile").innerHTML =
       result.username["user"];
     document.querySelector("#country-profile").innerHTML = `
@@ -159,7 +180,13 @@ function showUserProfile(username) {
         <p>Hi, I'm ${result.username.user}. I'm ${result.username.age} years old. I've joined this awesome social network at ${result.username.joined}</p>
         <p>${result.username.bio}</p>`;
 
-    show_posts(result.username.posts, 1, 10, result.username.liked_posts);
+    show_posts(
+      result.username.posts,
+      1,
+      10,
+      result.username.liked_posts,
+      result.username.comments
+    );
 
     if (result.current_user.user === result.username.user) {
       document.querySelector("#info-profile").innerHTML = `
@@ -202,7 +229,6 @@ async function fetch_profile(current_user, username) {
     } else {
       const current_user_response = await fetch(`/profile/${current_user}`);
       const current_user_data = await current_user_response.json();
-
       return {
         current_user: current_user_data,
         username: current_user_data,
@@ -221,6 +247,7 @@ function edit_profile(event) {
   const age = document.querySelector("#age").value;
   const bio = document.querySelector("#bio").value;
   const cover = document.querySelector("#background-cover").value;
+  const country = document.querySelector("#country").value;
 
   fetch("/edit-profile", {
     method: "Put",
@@ -240,12 +267,21 @@ function edit_profile(event) {
       } else if ("message" in result) {
         document.querySelector("#show-alert").style.display = "block";
         document.querySelector("#show-alert").innerHTML = result["message"];
+
+        // hide modal after clicking on save
+        const modal = document.getElementById("staticBackdrop");
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        modalInstance.hide();
+
+        // update profile
+        current_user = document.querySelector("#profile-username").innerHTML;
+        showUserProfile(current_user);
       }
     });
 }
 
 // * SHOW POSTS
-function show_posts(posts, page, posts_per_page, liked_posts) {
+function show_posts(posts, page, posts_per_page, liked_posts, comments) {
   try {
     let total_pages = Math.ceil(posts.length / posts_per_page);
     let start = (page - 1) * posts_per_page;
@@ -260,9 +296,7 @@ function show_posts(posts, page, posts_per_page, liked_posts) {
       ).innerHTML = ` <div class="row h-100" id="empty-posts">
       <div class="col-md-12 my-auto mt-5" >
           <img class="img-responsive center-block d-block mx-auto mb-2" id="empty" src="" alt="empty" width="10%">
-          <h5 class="text-comment text-center"><strong>No posts yet</strong> 
-            
-          </h5>
+          <h5 class="text-comment text-center"><strong>No posts yet</strong></h5>
       </div>
      </div>`;
       document.querySelector("#empty").src =
@@ -271,72 +305,76 @@ function show_posts(posts, page, posts_per_page, liked_posts) {
       let current_user = document.querySelector("#profile-username").innerHTML;
 
       posts_to_show.forEach((post) => {
-        const post_div = document.createElement("div");
+        const post_card = document.createElement("div");
+        post_card.setAttribute("class", "accordion-item");
+        post_card.setAttribute("id", "accordion-card");
 
-        post_div.setAttribute(
-          "class",
-          "post card mb-3 shadow border-0 rounded-0"
-        );
+        post_card.innerHTML = `
 
-        post_div.setAttribute("id", "post");
+            <div class="accordion-header card mb-3 shadow border-0 rounded-0" id="flush-${post.id}">
 
-        post_div.innerHTML = `
-          <div class="card-body">
-            <div class="row justify-content-between">
-              <div class="col-6 ">
-                <a onclick="showUser('${post.user}')" data-username="${post.user}" class="d-flex inline-block"><img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30"><h5 id="username" class="card-title">${post.user}</h5>
-                </a>
-              </div>
-              <div class="col-6 text-end">
-                <p class="card-text"><small class="text-muted">${post.timestamp}</small></p>
-              </div>
-            </div>
+                <div class="card-body">
+                    <div class="row justify-content-between">
+                        <div class="col-6 ">
+                            <a onclick="showUser('${post.user}')" data-username="${post.user}" class="d-flex inline-block">
+                                <img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30">
+                                <h5 id="username" class="card-title">${post.user}</h5>
+                            </a>
+                        </div>
+                        <div class="col-6 text-end">
+                            <p class="card-text"><small class="text-muted">${post.timestamp}</small></p>
+                        </div>
+                    </div>
 
-            <p class="card-text">${post.content}</p>
+                    <div class="row justify-content-center mb-3">
+                      <div class="col-11">
+                        <p class="card-text mt-2">${post.content}</p>
+                      </div>
+                    </div>
+                    
+                    <div id="like-comment-edit-delete" class="row justify-content-between align-items-center">
+                      
+                          <div class="col-auto">
+                              <a class="ms-2 me-3 position-relative col-4" onclick="like_post('${post.id}')">
+                                  <span id="like-${post.id}"></span>
+                              </a>
+                          </div>
 
-            <div class="row justify-content-between">
-              <div id="like-comment-edit-delete" class="col">
+                          <div class="col-auto text-start">
+                              <a class="accordion-button collapsed col-8" type="button" data-bs-toggle="collapse" data-bs-target="#data-collapse${post.id}" aria-expanded="false" aria-controls="accordion-${post.id}">
+                                  <i class="fas fa-reply me-2"></i> <small id="comments-count-${post.id}" class="text-secondary me-2">No comments</small>
+                              </a>
+                          </div>
 
-              <a class="me-3 position-relative" onclick="like_post('${post.id}')">
-                  <span id="like-${post.id}"></span>
-              </a>
-
-            <a class="me-3" onclick="comment_post('${post.id}')">
-              <i class="fas fa-comment"></i> Comment
-          </a>
-              </div>
-              <div id="edit-post" class="col-1 text-end"></div>
-            </div>
-          
-        </div>
-        `;
-
-        // create accordion text area with comments for each post
-        const accordion_div = document.createElement("div");
-        accordion_div.setAttribute("class", "accordion-item");
-        accordion_div.setAttribute("id", "accordion-item");
-
-        accordion_div.innerHTML = `
-        <div class="accordion-collapse collapse" id="collapse-${post.id}">
-          <div class="accordion-body">
-            <div class="row">
-              <div class="col-12">
-                <div class="input-group mb-3">
-                  <input type="text" class="form-control" id="comment-${post.id}" placeholder="Write a comment" aria-label="Write a comment" aria-describedby="button-addon2">
-                  <button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="comment('${post.id}')">Comment</button>
+                          <div id="edit-post" class="col text-end"></div>
+                    </div>
                 </div>
-              </div>
             </div>
-            <div class="row">
-              <div class="col-12">
-                <div id="comments-${post.id}"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        `;
 
-        document.querySelector("#posts").append(post_div);
+            <div id="data-collapse${post.id}" class="accordion-collapse collapse" aria-labelledby="flush-${post.id}" data-bs-parent="#accordionPosts">
+                <div class="accordion-body">
+                    <div id="comment" class="row">
+                        <form id="comment-form">
+                          <div class="form-group">
+                              <textarea class="form-control border-0 new-comment-content shadow-none" rows="3" maxlength="300" placeholder="Leave a comment here" id="new-comment-${post.id}" oninput="return characters_left(this,'characters-left-comment')"></textarea>
+                          </div>
+                          <div class="row justify-content-end">
+                            <div class="col ">
+                              <p id="characters-left-comment" class="m-0 pt-3 ps-1"></p>
+                            </div>
+                            <div class="col-auto pe-3 me-1">
+                              <button type="submit" onclick="new_comment(event, '${post.id}')" class="btn btn-outline-primary mt-2 mb-3 text-end">Post</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="comments-${post.id}" class="mt-4">
+                        
+                    </div>
+                </div>
+            </div>
+`;
+
+        document.querySelector("#accordionPosts").append(post_card);
 
         // ! ADD STYLE TO LIKED POSTS BY CURRENT USER
         if (liked_posts.includes(post.id)) {
@@ -350,7 +388,7 @@ function show_posts(posts, page, posts_per_page, liked_posts) {
         }
 
         // ! ADD EDIT AND DELETE BUTTONS FOR CURRENT USER
-        document.querySelectorAll("#post").forEach((element) => {
+        document.querySelectorAll("#accordion-card").forEach((element) => {
           if (element.querySelector("#username").innerHTML === current_user) {
             element.querySelector(
               "#edit-post"
@@ -380,6 +418,64 @@ function show_posts(posts, page, posts_per_page, liked_posts) {
           </div>`;
           }
         });
+
+        let comment_count = 0;
+
+        // ! SHOW COMMENTS
+        comments.forEach((comment) => {
+          if (comment.post === post.id) {
+            const comment_div = document.createElement("div");
+
+            comment_div.setAttribute(
+              "class",
+              "card mb-3 shadow border-0 rounded-0"
+            );
+
+            comment_div.innerHTML = `
+            <div class="card-body" id="comment-post">
+              <div class="row justify-content-between">
+                <div class="col-6">
+                  <a onclick="showUser('${comment.user}')" data-username="${comment.user}" class="d-flex inline-block">
+                    <img src="" class="rounded-circle me-2" width="30" height="30">
+                    <h5 id="comment-username" class="card-title">${comment.user}</h5>
+                  </a>
+                </div>
+                <div class="col-6 text-end">
+                  <p class="card-text"><small class="text-muted">${comment.timestamp}</small></p>
+                </div>
+              </div>
+              <div class="row justify-content-center mb-3">
+                <div class="col-11">
+                  <p class="card-text mt-2">${comment.content}</p>
+                </div>
+              </div>
+            </div>`;
+
+            document.querySelector(`#comments-${post.id}`).append(comment_div);
+
+            // get value of data-username attribute
+            const username =
+              comment_div.querySelector("#comment-username").innerHTML;
+            const request = fetch(`/profile/${username}`);
+            const response = request.then((response) => response.json());
+            response.then((data) => {
+              comment_div.querySelector("img").src = data.avatar;
+            });
+
+            // comment count for each post
+            comment_count += 1;
+
+            if (comment_count <= 1) {
+              document.querySelector(
+                `#comments-count-${post.id}`
+              ).innerHTML = `${comment_count} comment`;
+            } else if (comment_count > 1) {
+              document.querySelector(
+                `#comments-count-${post.id}`
+              ).innerHTML = `${comment_count} comments`;
+            }
+          }
+        });
       });
 
       // ! PAGINATION
@@ -392,9 +488,11 @@ function show_posts(posts, page, posts_per_page, liked_posts) {
 
         document.querySelector("#next").onclick = () => {
           if (page < total_pages) {
+            console.log(`page: ${page}`);
             page++;
+            console.log(`next page: ${page}`);
             clear();
-            show_posts(posts, page, posts_per_page, liked_posts);
+            show_posts(posts, page, posts_per_page, liked_posts, comments);
             document.querySelector(
               "#page-number"
             ).innerHTML = `${page} of ${total_pages}`;
@@ -405,7 +503,7 @@ function show_posts(posts, page, posts_per_page, liked_posts) {
           if (page > 1) {
             page--;
             clear();
-            show_posts(posts, page, posts_per_page, liked_posts);
+            show_posts(posts, page, posts_per_page, liked_posts, comments);
             document.querySelector(
               "#page-number"
             ).innerHTML = `${page} of ${total_pages}`;
@@ -426,10 +524,15 @@ async function fetch_posts(name, page) {
     const request = await fetch(`/network/${name}`);
     const response = await request.json();
 
-    // page = 1;
     let posts_per_page = 10;
 
-    show_posts(response.posts, page, posts_per_page, response.liked);
+    show_posts(
+      response.posts,
+      page,
+      posts_per_page,
+      response.liked,
+      response.comments
+    );
   } catch (error) {
     console.log(error);
   }
@@ -474,6 +577,38 @@ function post_button(event, section) {
     showSection("all-posts-section");
   }
   history.pushState({ section }, section, section);
+}
+
+// * NEW COMMENT
+function new_comment(event, post_id) {
+  event.preventDefault();
+
+  const content = document.querySelector(`#new-comment-${post_id}`).value;
+
+  fetch(`/comments/${post_id}`, {
+    method: "POST",
+    body: JSON.stringify({
+      content: content,
+    }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if ("error" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["error"];
+      } else if ("message" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["message"];
+        fetch_posts("all-posts-section", 1);
+        // // keep the accordion open
+        // document
+        //   .querySelector(`#data-collapse${post_id}`)
+        //   .classList.add("show");
+      }
+    })
+    .catch((error) => {
+      console.log("Error:", error);
+    });
 }
 
 // ? FOLLOW A USER
@@ -528,4 +663,52 @@ function like_post(post_id) {
     .catch((error) => {
       console.log("Error:", error);
     });
+}
+
+// refresh comments of a post by post_id and section
+function refresh_comments(post_id, section) {
+  fetch(`/comments/${post_id}`)
+    .then((response) => response.json())
+    .then((result) => {
+      if ("error" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["error"];
+      } else if ("comments" in result) {
+        show_comments(result.comments, post_id, section);
+      }
+    })
+    .catch((error) => {
+      console.log("Error:", error);
+    });
+}
+
+// * SHOW COMMENTS
+function show_comments(comments, post_id, section) {
+  const comments_section = document.querySelector(`#comments-${post_id}`);
+  comments_section.innerHTML = "";
+
+  comments.forEach((comment) => {
+    const comment_div = document.createElement("div");
+    comment_div.className = "comment";
+
+    const comment_content = document.createElement("p");
+    comment_content.innerHTML = comment.content;
+
+    const comment_user = document.createElement("p");
+    comment_user.innerHTML = comment.user;
+
+    const comment_date = document.createElement("p");
+    comment_date.innerHTML = comment.date;
+
+    comment_div.append(comment_content, comment_user, comment_date);
+
+    comments_section.append(comment_div);
+  });
+
+  if (section === "profile-section") {
+    showSection("profile-section");
+  } else {
+    showSection("all-posts-section");
+  }
+  history.pushState({ section }, section, section);
 }
