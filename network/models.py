@@ -11,7 +11,7 @@ class Profile(models.Model):
     avatar = models.CharField(max_length=500, default="https://cdn-icons-png.flaticon.com/512/3177/3177440.png",)    
     country = models.CharField(max_length=200, default="USA")
     age = models.IntegerField(default=0)
-    bio = models.CharField(max_length=400, default="", blank=True)
+    bio = models.CharField(max_length=300, default="", blank=True)
     followers = models.ManyToManyField(User, related_name="followers", blank=True)
     following = models.ManyToManyField(User, related_name="following", blank=True)
 
@@ -52,7 +52,7 @@ class Post(models.Model):
             "user": self.user.username,
             "content": self.content,
             'user_avatar': self.user_avatar,
-            "timestamp": self.timestamp,
+            "timestamp": self.timestamp.strftime("%b. %d %Y, at %I:%M %p"),
             "likes": self.likes
         }
 
@@ -68,5 +68,5 @@ class Comment(models.Model):
             "user": self.user.username,
             "post": self.post.id,
             "content": self.content,
-            "timestamp": self.timestamp
+            "timestamp": self.timestamp.strftime("%b. %d %Y, at %I:%M %p")
         }
