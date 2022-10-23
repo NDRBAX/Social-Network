@@ -19,12 +19,10 @@ function clear() {
       post.remove();
     });
 
-    document
-      .querySelector("#posts")
-      .removeChild(document.querySelector("#empty-posts"));
+    document.querySelector("#no-posts").innerHTML = "";
 
     console.log("cleared");
-    document.querySelector("#show-alert").innerHTML = "";
+    // document.querySelector("#show-alert").innerHTML = "";
   } catch (error) {
     console.log(error);
   }
@@ -35,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".nav-link").forEach((link) => {
     link.onclick = () => {
       const section = link.dataset.section;
+      document.querySelector("#show-alert").innerHTML = "";
       clear();
       if (section === "profile-section") {
         const username = document.querySelector("#profile-username").innerHTML;
@@ -47,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   });
 
-  document.querySelector("#new-post-form").onsubmit = post_button;
+  document.querySelector("#new-post-form").onsubmit = new_post;
   document.querySelector("#edit-profile-form").onsubmit = edit_profile;
 
   refresh();
@@ -87,14 +86,13 @@ function characters_left(textarea, display) {
   } else {
     document.querySelector(
       `#${display}`
-    ).innerHTML = `<small class="text-muted "><strong>${characters_left}</strong> characters left</small>`;
-
+    ).innerHTML = `<small><strong>${characters_left}</strong> characters left</small>`;
     if (characters_left < 50) {
       document.querySelector(`#${display}`).style.color = "red";
-    } else if (characters_left < 70) {
+    } else if (characters_left < 100) {
       document.querySelector(`#${display}`).style.color = "orange";
     } else {
-      document.querySelector(`#${display}`).style.color = "black";
+      document.querySelector(`#${display}`).style.color = "grey";
     }
   }
 }
@@ -280,7 +278,7 @@ function edit_profile(event) {
     });
 }
 
-// * SHOW POSTS
+// * POSTS TEMPLATE
 function show_posts(posts, page, posts_per_page, liked_posts, comments) {
   try {
     let total_pages = Math.ceil(posts.length / posts_per_page);
@@ -292,7 +290,7 @@ function show_posts(posts, page, posts_per_page, liked_posts, comments) {
 
     if (posts.length === 0) {
       document.querySelector(
-        "#posts"
+        "#no-posts"
       ).innerHTML = ` <div class="row h-100" id="empty-posts">
       <div class="col-md-12 my-auto mt-5" >
           <img class="img-responsive center-block d-block mx-auto mb-2" id="empty" src="" alt="empty" width="10%">
@@ -306,73 +304,131 @@ function show_posts(posts, page, posts_per_page, liked_posts, comments) {
 
       posts_to_show.forEach((post) => {
         const post_card = document.createElement("div");
-        post_card.setAttribute("class", "accordion-item");
+        post_card.setAttribute("class", `accordion-item post-${post.id}`);
         post_card.setAttribute("id", "accordion-card");
 
-        post_card.innerHTML = `
+        post_card.innerHTML = `<div class="accordion-header card mb-3 shadow border-0 rounded-0" id="flush-${post.id}">
 
-            <div class="accordion-header card mb-3 shadow border-0 rounded-0" id="flush-${post.id}">
-
-                <div class="card-body">
-                    <div class="row justify-content-between">
-                        <div class="col-6 ">
-                            <a onclick="showUser('${post.user}')" data-username="${post.user}" class="d-flex inline-block">
-                                <img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30">
-                                <h5 id="username" class="card-title">${post.user}</h5>
-                            </a>
-                        </div>
-                        <div class="col-6 text-end">
-                            <p class="card-text"><small class="text-muted">${post.timestamp}</small></p>
-                        </div>
-                    </div>
-
-                    <div class="row justify-content-center mb-3">
-                      <div class="col-11">
-                        <p class="card-text mt-2">${post.content}</p>
+          <div class="card-body">
+              <div class="row justify-content-between">
+                  <div class="col-6 ">
+                      <a onclick="showUser('${post.user}')" data-username="${post.user}" class="d-flex inline-block">
+                          <img src="${post.user_avatar}" class="rounded-circle me-2" width="30" height="30">
+                          <h5 id="username" class="card-title">${post.user}</h5>
+                      </a>
+                  </div>
+                  <div class="col-6 text-end">
+                      <p class="card-text"><small class="text-muted">${post.timestamp}</small></p>
+                  </div>
+              </div>
+      
+              <div class="row justify-content-center mb-3">
+                  <div class="col-11">
+                      <p class="card-text mt-2">${post.content}</p>
+                  </div>
+              </div>
+      
+              <div id="like-comment-edit-delete" class="row justify-content-between align-items-center">
+      
+                  <div class="col-auto">
+                      <a class="ms-2 me-3 position-relative col-4" onclick="like_post('${post.id}')">
+                          <span id="like-${post.id}"></span>
+                      </a>
+                  </div>
+      
+                  <div class="col-auto text-start">
+                      <a class="accordion-button collapsed col-8" id="button-comment-${post.id}" type="button" data-bs-toggle="collapse" data-bs-target="#data-collapse${post.id}" aria-expanded="false" aria-controls="accordion-${post.id}">
+                          <i class="fas fa-reply me-2"></i> <small id="comments-count-${post.id}" class="text-secondary me-2">No comments</small>
+                      </a>
+                  </div>
+      
+                  <div id="edit-post" class="col text-end">
+                  <div class="dropdown-start">
+                  <button
+                    class="btn btn-outline-secondary
+                      btn-sm dropdown-toggle border-light"
+                    type="button"
+                    id="dropdownMenuButton1"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <i class="fas fa-sliders-h"></i>
+                  </button>
+      
+                  <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                    <li>
+                      <a class="dropdown-item"  data-bs-toggle="modal" data-bs-target="#editPostBackdrop-${post.id}">
+                        Edit post
+                      </a>
+                    </li>
+      
+                    <li>
+                      <a class="dropdown-item" onclick="delete_post('${post.id}')">
+                        Delete post
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+                  
+                  </div>
+      
+                  <div class="modal modal-lg fade" id="editPostBackdrop-${post.id}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="editPostBackdropLabel" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered">
+                          <div class="modal-content">
+                              <div class="modal-header">
+                                  <h1 class=" modal-title fs-5 " id="editPostBackdropLabel">Edit post</h1>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+      
+                              <form id="edit-post-form-${post.id}">
+                                  <div class="modal-body">
+                                      <div class="mb-3">
+                                          <textarea class="form-control border-0 shadow-none edit-post-content" id="edit-post-content-${post.id}" rows="4" maxlength="300" oninput="return characters_left(this, 'characters-left-edit')">${post.content}</textarea>
+                                      </div>
+                                  </div>
+      
+                                  <div class="modal-footer justify-content-between">
+                                      
+                                          <div class="col-4 text-start">
+                                              <p class="  pb-0 mb-0" id="characters-left-edit"></p>
+                                          </div>
+                                          <div class="col-7 me-0 pe-1 text-end">
+                                              <button type="button" class="btn btn-secondary me-1" data-bs-dismiss="modal">Close</button>
+      
+                                              <button onclick="edit_post('${post.id}')" class="btn btn-primary">Save</button>
+                                          </div>
+                                  </div>
+                              </form>
+                          </div>
                       </div>
-                    </div>
-                    
-                    <div id="like-comment-edit-delete" class="row justify-content-between align-items-center">
-                      
-                          <div class="col-auto">
-                              <a class="ms-2 me-3 position-relative col-4" onclick="like_post('${post.id}')">
-                                  <span id="like-${post.id}"></span>
-                              </a>
-                          </div>
-
-                          <div class="col-auto text-start">
-                              <a class="accordion-button collapsed col-8" type="button" data-bs-toggle="collapse" data-bs-target="#data-collapse${post.id}" aria-expanded="false" aria-controls="accordion-${post.id}">
-                                  <i class="fas fa-reply me-2"></i> <small id="comments-count-${post.id}" class="text-secondary me-2">No comments</small>
-                              </a>
-                          </div>
-
-                          <div id="edit-post" class="col text-end"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="data-collapse${post.id}" class="accordion-collapse collapse" aria-labelledby="flush-${post.id}" data-bs-parent="#accordionPosts">
-                <div class="accordion-body">
-                    <div id="comment" class="row">
-                        <form id="comment-form">
-                          <div class="form-group">
-                              <textarea class="form-control border-0 new-comment-content shadow-none" rows="3" maxlength="300" placeholder="Leave a comment here" id="new-comment-${post.id}" oninput="return characters_left(this,'characters-left-comment')"></textarea>
-                          </div>
-                          <div class="row justify-content-end">
-                            <div class="col ">
+                  </div>
+      
+              </div>
+          </div>
+      
+      </div>
+      
+      
+      <div id="data-collapse${post.id}" class="accordion-collapse collapse" aria-labelledby="flush-${post.id}" data-bs-parent="#accordionPosts">
+          <div class="accordion-body">
+              <div id="comment" class="row">
+                  <form id="comment-form">
+                      <div class="form-group">
+                          <textarea class="form-control border-0 new-comment-content shadow-none" rows="3" maxlength="300" placeholder="Leave a comment here" id="new-comment-${post.id}" oninput="return characters_left(this,'characters-left-comment')"></textarea>
+                      </div>
+                      <div class="row justify-content-end">
+                          <div class="col ">
                               <p id="characters-left-comment" class="m-0 pt-3 ps-1"></p>
-                            </div>
-                            <div class="col-auto pe-3 me-1">
+                          </div>
+                          <div class="col-auto pe-3 me-1">
                               <button type="submit" onclick="new_comment(event, '${post.id}')" class="btn btn-outline-primary mt-2 mb-3 text-end">Post</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div id="comments-${post.id}" class="mt-4">
-                        
-                    </div>
-                </div>
-            </div>
-`;
+                          </div>
+                      </div>
+                  </form>
+      
+                  <div id="comments-${post.id}" class="mt-4"></div>
+              </div>
+          </div>
+        </div>`;
 
         document.querySelector("#accordionPosts").append(post_card);
 
@@ -389,33 +445,8 @@ function show_posts(posts, page, posts_per_page, liked_posts, comments) {
 
         // ! ADD EDIT AND DELETE BUTTONS FOR CURRENT USER
         document.querySelectorAll("#accordion-card").forEach((element) => {
-          if (element.querySelector("#username").innerHTML === current_user) {
-            element.querySelector(
-              "#edit-post"
-            ).innerHTML = `<div class="dropdown-start">
-            <button
-              class="btn btn-outline-secondary
-                btn-sm dropdown-toggle border-light"
-              type="button"
-              id="dropdownMenuButton1"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="fas fa-sliders-h"></i>
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-              <li>
-                <a class="dropdown-item" onclick="delete_post(${post.id})">
-                  Delete post
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" onclick="edit_post(${post.id})">
-                  Edit post
-                </a>
-              </li>
-            </ul>
-          </div>`;
+          if (element.querySelector("#username").innerHTML !== current_user) {
+            element.querySelector("#edit-post").innerHTML = "";
           }
         });
 
@@ -453,7 +484,6 @@ function show_posts(posts, page, posts_per_page, liked_posts, comments) {
 
             document.querySelector(`#comments-${post.id}`).append(comment_div);
 
-            // get value of data-username attribute
             const username =
               comment_div.querySelector("#comment-username").innerHTML;
             const request = fetch(`/profile/${username}`);
@@ -462,7 +492,6 @@ function show_posts(posts, page, posts_per_page, liked_posts, comments) {
               comment_div.querySelector("img").src = data.avatar;
             });
 
-            // comment count for each post
             comment_count += 1;
 
             if (comment_count <= 1) {
@@ -518,10 +547,10 @@ function show_posts(posts, page, posts_per_page, liked_posts, comments) {
   }
 }
 
-// * FETCH POSTS
-async function fetch_posts(name, page) {
+// * FETCH & SHOW POSTS
+async function fetch_posts(section, page) {
   try {
-    const request = await fetch(`/network/${name}`);
+    const request = await fetch(`/network/${section}`);
     const response = await request.json();
 
     let posts_per_page = 10;
@@ -545,6 +574,8 @@ function new_post(event) {
   const content = document.querySelector("#new-post-content").value;
   document.querySelector("#new-post-content").value = "";
 
+  const url = window.location.href;
+
   fetch("/new-post", {
     method: "POST",
     body: JSON.stringify({
@@ -559,6 +590,26 @@ function new_post(event) {
       } else if ("message" in result) {
         document.querySelector("#show-alert").style.display = "block";
         document.querySelector("#show-alert").innerHTML = result["message"];
+
+        current_page = document
+          .querySelector("#page-number")
+          .innerHTML.split("of")[0];
+
+        if (url.includes("all-posts")) {
+          if (current_page) {
+            fetch_posts("all-posts-section", current_page);
+          } else {
+            showSection("all-posts-section");
+          }
+        } else if (url.includes("user")) {
+          showUserProfile(url.split("/").pop());
+        } else if (url.includes("following")) {
+          if (current_page) {
+            fetch_posts("following-section", current_page);
+          } else {
+            showSection("following-section");
+          }
+        }
       }
     })
     .catch((error) => {
@@ -566,23 +617,11 @@ function new_post(event) {
     });
 }
 
-// * SEND A NEW POST
-function post_button(event, section) {
-  new_post(event);
-  clear();
-
-  if (section === "profile-section") {
-    showSection("profile-section");
-  } else {
-    showSection("all-posts-section");
-  }
-  history.pushState({ section }, section, section);
-}
-
 // * NEW COMMENT
 function new_comment(event, post_id) {
   event.preventDefault();
 
+  const url = window.location.href;
   const content = document.querySelector(`#new-comment-${post_id}`).value;
 
   fetch(`/comments/${post_id}`, {
@@ -599,11 +638,26 @@ function new_comment(event, post_id) {
       } else if ("message" in result) {
         document.querySelector("#show-alert").style.display = "block";
         document.querySelector("#show-alert").innerHTML = result["message"];
-        fetch_posts("all-posts-section", 1);
-        // // keep the accordion open
-        // document
-        //   .querySelector(`#data-collapse${post_id}`)
-        //   .classList.add("show");
+
+        current_page = document
+          .querySelector("#page-number")
+          .innerHTML.split("of")[0];
+
+        if (url.includes("all-posts")) {
+          if (current_page) {
+            fetch_posts("all-posts-section", current_page);
+          } else {
+            showSection("all-posts-section");
+          }
+        } else if (url.includes("user")) {
+          showUserProfile(url.split("/").pop());
+        } else if (url.includes("following")) {
+          if (current_page) {
+            fetch_posts("following-section", current_page);
+          } else {
+            showSection("following-section");
+          }
+        }
       }
     })
     .catch((error) => {
@@ -636,6 +690,8 @@ function follow_user(username) {
 // ? LIKE A POST
 function like_post(post_id) {
   console.log(`Post ID ${post_id}`);
+
+  const url = window.location.href;
   fetch(`/like-post/${post_id}`, {
     method: "PUT",
   })
@@ -652,12 +708,21 @@ function like_post(post_id) {
           .querySelector("#page-number")
           .innerHTML.split("of")[0];
 
-        fetch_posts("all-posts-section", current_page);
-        history.pushState(
-          { section: "all-posts-section" },
-          "all-posts-section",
-          "/#all-posts-section"
-        );
+        if (url.includes("all-posts")) {
+          if (current_page) {
+            fetch_posts("all-posts-section", current_page);
+          } else {
+            showSection("all-posts-section");
+          }
+        } else if (url.includes("user")) {
+          showUserProfile(url.split("/").pop());
+        } else if (url.includes("following")) {
+          if (current_page) {
+            fetch_posts("following-section", current_page);
+          } else {
+            showSection("following-section");
+          }
+        }
       }
     })
     .catch((error) => {
@@ -665,16 +730,34 @@ function like_post(post_id) {
     });
 }
 
-// refresh comments of a post by post_id and section
-function refresh_comments(post_id, section) {
-  fetch(`/comments/${post_id}`)
+// ? DELETE A POST
+function delete_post(post_id) {
+  const url = window.location.href;
+
+  console.log(`Post ID ${post_id}`);
+  fetch(`/delete-post/${post_id}`, {
+    method: "DELETE",
+  })
     .then((response) => response.json())
     .then((result) => {
       if ("error" in result) {
         document.querySelector("#show-alert").style.display = "block";
         document.querySelector("#show-alert").innerHTML = result["error"];
-      } else if ("comments" in result) {
-        show_comments(result.comments, post_id, section);
+      } else if ("message" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["message"];
+
+        current_page = document
+          .querySelector("#page-number")
+          .innerHTML.split("of")[0];
+
+        if (url.includes("all-posts")) {
+          showSection("all-posts-section");
+        } else if (url.includes("user")) {
+          showUserProfile(url.split("/").pop());
+        } else if (url.includes("following")) {
+          showSection("following-section");
+        }
       }
     })
     .catch((error) => {
@@ -682,33 +765,44 @@ function refresh_comments(post_id, section) {
     });
 }
 
-// * SHOW COMMENTS
-function show_comments(comments, post_id, section) {
-  const comments_section = document.querySelector(`#comments-${post_id}`);
-  comments_section.innerHTML = "";
+// ? EDIT A POST
+function edit_post(post_id) {
+  let content = document.querySelector(`#edit-post-content-${post_id}`).value;
+  const url = window.location.href;
 
-  comments.forEach((comment) => {
-    const comment_div = document.createElement("div");
-    comment_div.className = "comment";
+  fetch(`/edit-post/${post_id}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      content: content,
+    }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if ("error" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["error"];
+      } else if ("message" in result) {
+        document.querySelector("#show-alert").style.display = "block";
+        document.querySelector("#show-alert").innerHTML = result["message"];
 
-    const comment_content = document.createElement("p");
-    comment_content.innerHTML = comment.content;
+        const modal = document.getElementById(`editPostBackdrop-${post_id}`);
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        modalInstance.hide();
 
-    const comment_user = document.createElement("p");
-    comment_user.innerHTML = comment.user;
-
-    const comment_date = document.createElement("p");
-    comment_date.innerHTML = comment.date;
-
-    comment_div.append(comment_content, comment_user, comment_date);
-
-    comments_section.append(comment_div);
-  });
-
-  if (section === "profile-section") {
-    showSection("profile-section");
-  } else {
-    showSection("all-posts-section");
-  }
-  history.pushState({ section }, section, section);
+        current_page = document
+          .querySelector("#page-number")
+          .innerHTML.split("of")[0];
+        if (url.includes("all-posts")) {
+          showSection("all-posts-section");
+        } else if (url.includes("user")) {
+          console.log(url.split("/").pop());
+          showUserProfile(url.split("/").pop());
+        } else if (url.includes("following")) {
+          showSection("following-section");
+        }
+      }
+    })
+    .catch((error) => {
+      console.log("Error:", error);
+    });
 }
