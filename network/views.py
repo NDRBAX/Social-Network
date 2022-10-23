@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from re import L
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, Http404, HttpResponseRedirect, JsonResponse
@@ -12,31 +13,11 @@ from django.contrib.auth.decorators import login_required
 
 from .models import *
 
-
 def index(request):
     if request.user.is_authenticated:
         profile = Profile.objects.get(user=request.user)
-
-        # number of user posts
-        posts = Post.objects.filter(user=request.user).order_by("-timestamp").all()
-        num_posts = len(posts)
-
-        # number of user followers
-        followers = profile.followers.all()
-        num_followers = len(followers)
-
-        # number of user following
-        following = profile.following.all()
-        num_following = len(following)
-
-        print(profile.user)
-
         return render(request, "network/index.html", {
             "profile": profile,
-            "num_posts": num_posts,
-            "num_followers": num_followers,
-            "num_following": num_following
-
         })
     else:
         return HttpResponseRedirect(reverse("login"))
@@ -60,11 +41,9 @@ def login_view(request):
     else:
         return render(request, "network/login.html")
 
-
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
-
 
 def register(request):
     if request.method == "POST":
@@ -99,17 +78,26 @@ def register(request):
 def section(request, section):
     if section == "all-posts-section":
         posts = Post.objects.all()
+        comments = Comment.objects.all()
     elif section == "profile-section":
         posts = Post.objects.filter(user=request.user)
+        comments = Comment.objects.filter(user=request.user)
     elif section == "following-section":
         following = Profile.objects.get(user=request.user).following.all()
         posts = Post.objects.filter(user__in=following)
-
+        comments = Comment.objects.filter(user=request.user)
     else:
         return JsonResponse({"error": "Invalid page."}, status=400)
 
     posts = posts.order_by("-timestamp").all()
-    return JsonResponse([post.serialize() for post in posts], safe=False, )
+    liked_posts = Like.objects.filter(user=request.user).values_list("post", flat=True)
+    comments = comments.order_by("-timestamp").all()
+
+    return JsonResponse({
+        "posts": [post.serialize() for post in posts],
+        "liked": [liked_posts for liked_posts in liked_posts],
+        "comments": [comment.serialize() for comment in comments],
+        }, safe=False)
 
 # edit profile 
 @csrf_exempt
@@ -144,6 +132,7 @@ def edit_profile(request):
 
     return JsonResponse({"message": "Profile updated successfully."}, status=201)
 
+# make a new post
 @csrf_exempt
 @login_required
 def new_post(request):
@@ -161,8 +150,8 @@ def new_post(request):
             return JsonResponse({"message": "Post created successfully."}, status=201)
     else:
         return JsonResponse({"error": "POST request required."}, status=400)
-    
 
+# edit post
 @csrf_exempt
 @login_required
 def edit_post(request, post_id):
@@ -176,20 +165,30 @@ def edit_post(request, post_id):
         return JsonResponse({"message": "Post updated successfully."}, status=201)
     return JsonResponse({"error": "PUT request required."}, status=400)
 
+# like a post
+@csrf_exempt
 @login_required
 def like_post(request, post_id):
     if request.method == "PUT":
-        data = json.loads(request.body)
         user = request.user
         post = Post.objects.get(id=post_id)
-        if user in post.likes.all():
-            post.likes.remove(user)
+        like = Like.objects.filter(user=user, post=post)
+
+        if like:
+            like.delete()
+            post.likes = post.likes - 1
+            post.save()
+            return JsonResponse({"message": "Post unliked successfully."}, status=201)
         else:
-            post.likes.add(user)
-        post.save()
-        return JsonResponse({"message": "Post liked successfully."}, status=201)
+            like = Like(user=user, post=post)
+            like.save()
+            post.likes = post.likes + 1
+            post.save()
+
+            return JsonResponse({"message": "Post liked successfully."}, status=201)
     return JsonResponse({"error": "PUT request required."}, status=400)
 
+# follow an user
 @csrf_exempt
 @login_required
 def follow_user(request, username):
@@ -215,7 +214,6 @@ def follow_user(request, username):
             return JsonResponse({"message": "User followed successfully."}, status=201)
     return JsonResponse({"error": "PUT request required."}, status=400)
 
-
 # show user profile 
 @login_required
 def user_profile(request, username):
@@ -223,14 +221,13 @@ def user_profile(request, username):
         user = User.objects.get(username=username)
         profile = Profile.objects.get(user=user)
         posts = Post.objects.filter(user=user).all().order_by("-timestamp")
-
-        # calculate since when the user is a member
-        now = datetime.now()
-
-
+        liked_posts = Like.objects.filter(user=request.user).values_list("post", flat=True)
+        # comments / posts
+        comments = Comment.objects.filter(user=user).all().order_by("-timestamp")
 
         return JsonResponse({
-            "user": user.username, 
+            "user": user.username,
+            "comments": [comment.serialize() for comment in comments],
             "avatar": profile.avatar, 
             "background_cover": profile.background_cover, 
             "country": profile.country, 
@@ -241,6 +238,34 @@ def user_profile(request, username):
             "followers_list": [follower.username for follower in profile.followers.all()],
             "following_list": [following.username for following in profile.following.all()],
             "joined": user.date_joined.strftime(f"%b. %d, %Y, %I:%M %p"),
+            "liked_posts": [liked_posts for liked_posts in liked_posts],
             "posts": [post.serialize() for post in posts]}, safe=False, status=201)
-        
-        
+
+# new comment
+@csrf_exempt
+@login_required
+def new_comment(request, post_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        content = data.get("content", "")
+        user = request.user
+        post = Post.objects.get(id=post_id)
+        if content == "":
+            return JsonResponse({"error": "Content is required."}, status=400)
+        else:
+            comment = Comment(user=user, post=post, content=content)
+            comment.save()
+            return JsonResponse({"message": "Comment created successfully."}, status=201)
+    else:
+        return JsonResponse({"error": "POST request required."}, status=400)
+
+# delete post
+@csrf_exempt
+@login_required
+def delete_post(request, post_id):
+    if request.method == "DELETE":
+        post = Post.objects.get(id=post_id)
+        post.delete()
+        return JsonResponse({"message": "Post deleted successfully."}, status=201)
+    else:
+        return JsonResponse({"error": "DELETE request required."}, status=400)
