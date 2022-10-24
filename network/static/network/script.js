@@ -22,7 +22,6 @@ function clear() {
     document.querySelector("#no-posts").innerHTML = "";
 
     console.log("cleared");
-    // document.querySelector("#show-alert").innerHTML = "";
   } catch (error) {
     console.log(error);
   }
@@ -33,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".nav-link").forEach((link) => {
     link.onclick = () => {
       const section = link.dataset.section;
+      document.querySelector("#characters-left").innerHTML = "";
       document.querySelector("#show-alert").innerHTML = "";
       clear();
       if (section === "profile-section") {
@@ -260,12 +260,8 @@ function edit_profile(event) {
     .then((response) => response.json())
     .then((result) => {
       if ("error" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["error"];
+        showError(result.error);
       } else if ("message" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["message"];
-
         // hide modal after clicking on save
         const modal = document.getElementById("staticBackdrop");
         const modalInstance = bootstrap.Modal.getInstance(modal);
@@ -274,6 +270,8 @@ function edit_profile(event) {
         // update profile
         current_user = document.querySelector("#profile-username").innerHTML;
         showUserProfile(current_user);
+
+        showAlert(result.message);
       }
     });
 }
@@ -382,14 +380,14 @@ function show_posts(posts, page, posts_per_page, liked_posts, comments) {
                               <form id="edit-post-form-${post.id}">
                                   <div class="modal-body">
                                       <div class="mb-3">
-                                          <textarea class="form-control border-0 shadow-none edit-post-content" id="edit-post-content-${post.id}" rows="4" maxlength="300" oninput="return characters_left(this, 'characters-left-edit')">${post.content}</textarea>
+                                          <textarea class="form-control border-0 shadow-none edit-post-content" id="edit-post-content-${post.id}" rows="4" maxlength="300" oninput="return characters_left(this, 'characters-left-edit-${post.id}')">${post.content}</textarea>
                                       </div>
                                   </div>
       
                                   <div class="modal-footer justify-content-between">
                                       
                                           <div class="col-4 text-start">
-                                              <p class="  pb-0 mb-0" id="characters-left-edit"></p>
+                                              <p class="  pb-0 mb-0" id="characters-left-edit-${post.id}"></p>
                                           </div>
                                           <div class="col-7 me-0 pe-1 text-end">
                                               <button type="button" class="btn btn-secondary me-1" data-bs-dismiss="modal">Close</button>
@@ -401,10 +399,8 @@ function show_posts(posts, page, posts_per_page, liked_posts, comments) {
                           </div>
                       </div>
                   </div>
-      
               </div>
           </div>
-      
       </div>
       
       
@@ -413,22 +409,21 @@ function show_posts(posts, page, posts_per_page, liked_posts, comments) {
               <div id="comment" class="row">
                   <form id="comment-form">
                       <div class="form-group">
-                          <textarea class="form-control border-0 new-comment-content shadow-none" rows="3" maxlength="300" placeholder="Leave a comment here" id="new-comment-${post.id}" oninput="return characters_left(this,'characters-left-comment')"></textarea>
+                          <textarea class="form-control border-0 new-comment-content shadow-none" rows="3" maxlength="300" placeholder="Leave a comment here" id="new-comment-${post.id}" oninput="return characters_left(this,'characters-left-comment-${post.id}')"></textarea>
                       </div>
                       <div class="row justify-content-end">
                           <div class="col ">
-                              <p id="characters-left-comment" class="m-0 pt-3 ps-1"></p>
+                              <p id="characters-left-comment-${post.id}" class="m-0 pt-3 ps-1"></p>
                           </div>
                           <div class="col-auto pe-3 me-1">
                               <button type="submit" onclick="new_comment(event, '${post.id}')" class="btn btn-outline-primary mt-2 mb-3 text-end">Post</button>
                           </div>
                       </div>
                   </form>
-      
                   <div id="comments-${post.id}" class="mt-4"></div>
               </div>
           </div>
-        </div>`;
+      </div>`;
 
         document.querySelector("#accordionPosts").append(post_card);
 
@@ -517,9 +512,7 @@ function show_posts(posts, page, posts_per_page, liked_posts, comments) {
 
         document.querySelector("#next").onclick = () => {
           if (page < total_pages) {
-            console.log(`page: ${page}`);
             page++;
-            console.log(`next page: ${page}`);
             clear();
             show_posts(posts, page, posts_per_page, liked_posts, comments);
             document.querySelector(
@@ -585,31 +578,11 @@ function new_post(event) {
     .then((response) => response.json())
     .then((result) => {
       if ("error" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["error"];
+        showError(result.error);
       } else if ("message" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["message"];
+        document.querySelector("#characters-left").innerHTML = "";
 
-        current_page = document
-          .querySelector("#page-number")
-          .innerHTML.split("of")[0];
-
-        if (url.includes("all-posts")) {
-          if (current_page) {
-            fetch_posts("all-posts-section", current_page);
-          } else {
-            showSection("all-posts-section");
-          }
-        } else if (url.includes("user")) {
-          showUserProfile(url.split("/").pop());
-        } else if (url.includes("following")) {
-          if (current_page) {
-            fetch_posts("following-section", current_page);
-          } else {
-            showSection("following-section");
-          }
-        }
+        redirectAfterSuccess(url, result.message);
       }
     })
     .catch((error) => {
@@ -633,31 +606,9 @@ function new_comment(event, post_id) {
     .then((response) => response.json())
     .then((result) => {
       if ("error" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["error"];
+        showError(result["error"]);
       } else if ("message" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["message"];
-
-        current_page = document
-          .querySelector("#page-number")
-          .innerHTML.split("of")[0];
-
-        if (url.includes("all-posts")) {
-          if (current_page) {
-            fetch_posts("all-posts-section", current_page);
-          } else {
-            showSection("all-posts-section");
-          }
-        } else if (url.includes("user")) {
-          showUserProfile(url.split("/").pop());
-        } else if (url.includes("following")) {
-          if (current_page) {
-            fetch_posts("following-section", current_page);
-          } else {
-            showSection("following-section");
-          }
-        }
+        redirectAfterSuccess(url, result["message"]);
       }
     })
     .catch((error) => {
@@ -674,11 +625,9 @@ function follow_user(username) {
     .then((response) => response.json())
     .then((result) => {
       if ("error" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["error"];
+        showError(result["error"]);
       } else if ("message" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["message"];
+        showAlert(result["message"]);
         showUserProfile(username);
       }
     })
@@ -689,8 +638,6 @@ function follow_user(username) {
 
 // ? LIKE A POST
 function like_post(post_id) {
-  console.log(`Post ID ${post_id}`);
-
   const url = window.location.href;
   fetch(`/like-post/${post_id}`, {
     method: "PUT",
@@ -698,31 +645,9 @@ function like_post(post_id) {
     .then((response) => response.json())
     .then((result) => {
       if ("error" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["error"];
+        showError(result["error"]);
       } else if ("message" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["message"];
-
-        current_page = document
-          .querySelector("#page-number")
-          .innerHTML.split("of")[0];
-
-        if (url.includes("all-posts")) {
-          if (current_page) {
-            fetch_posts("all-posts-section", current_page);
-          } else {
-            showSection("all-posts-section");
-          }
-        } else if (url.includes("user")) {
-          showUserProfile(url.split("/").pop());
-        } else if (url.includes("following")) {
-          if (current_page) {
-            fetch_posts("following-section", current_page);
-          } else {
-            showSection("following-section");
-          }
-        }
+        redirectAfterSuccess(url, result["message"]);
       }
     })
     .catch((error) => {
@@ -741,23 +666,9 @@ function delete_post(post_id) {
     .then((response) => response.json())
     .then((result) => {
       if ("error" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["error"];
+        showError(result["error"]);
       } else if ("message" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["message"];
-
-        current_page = document
-          .querySelector("#page-number")
-          .innerHTML.split("of")[0];
-
-        if (url.includes("all-posts")) {
-          showSection("all-posts-section");
-        } else if (url.includes("user")) {
-          showUserProfile(url.split("/").pop());
-        } else if (url.includes("following")) {
-          showSection("following-section");
-        }
+        redirectAfterSuccess(url, result["message"]);
       }
     })
     .catch((error) => {
@@ -779,30 +690,70 @@ function edit_post(post_id) {
     .then((response) => response.json())
     .then((result) => {
       if ("error" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["error"];
+        showError(result["error"]);
       } else if ("message" in result) {
-        document.querySelector("#show-alert").style.display = "block";
-        document.querySelector("#show-alert").innerHTML = result["message"];
-
         const modal = document.getElementById(`editPostBackdrop-${post_id}`);
         const modalInstance = bootstrap.Modal.getInstance(modal);
         modalInstance.hide();
 
-        current_page = document
-          .querySelector("#page-number")
-          .innerHTML.split("of")[0];
-        if (url.includes("all-posts")) {
-          showSection("all-posts-section");
-        } else if (url.includes("user")) {
-          console.log(url.split("/").pop());
-          showUserProfile(url.split("/").pop());
-        } else if (url.includes("following")) {
-          showSection("following-section");
-        }
+        redirectAfterSuccess(url, result["message"]);
       }
     })
     .catch((error) => {
       console.log("Error:", error);
     });
+}
+
+// ? SHOW ALERT
+function showAlert(message) {
+  document.querySelector("#show-alert").style.display = "block";
+
+  setTimeout(() => {
+    document.querySelector("#show-alert").style.display = "none";
+  }, 4000);
+
+  document.querySelector("#show-alert").innerHTML = `
+  <div class="alert alert-success fade show" role="alert">
+    <i class="fa-solid fa-circle-check me-2"></i>${message}
+  </div>`;
+}
+
+// ? SHOW ERROR
+function showError(message) {
+  document.querySelector("#show-alert").style.display = "block";
+
+  setTimeout(() => {
+    document.querySelector("#show-alert").style.display = "none";
+  }, 4000);
+
+  document.querySelector("#show-alert").innerHTML = `
+  <div class="alert alert-danger fade show" role="alert">
+  <i class="fa-solid fa-triangle-exclamation me-2"></i>${message}
+  </div>`;
+}
+
+// ? REDIRECT AFTER SUCCESS
+function redirectAfterSuccess(url, message) {
+  current_page = document
+    .querySelector("#page-number")
+    .innerHTML.split("of")[0];
+
+  console.log(current_page);
+
+  if (url.includes("all-posts")) {
+    if (current_page) {
+      fetch_posts("all-posts-section", current_page);
+    } else {
+      showSection("all-posts-section");
+    }
+  } else if (url.includes("user")) {
+    showUserProfile(url.split("/").pop());
+  } else if (url.includes("following")) {
+    if (current_page) {
+      fetch_posts("following-section", current_page);
+    } else {
+      showSection("following-section");
+    }
+  }
+  showAlert(message);
 }
