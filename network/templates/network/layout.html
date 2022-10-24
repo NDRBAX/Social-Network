@@ -3,26 +3,29 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>{% block title %}Social Network{% endblock %}</title>
+        <title>{% block title %} Network{% endblock %}</title>
         <script src="https://kit.fontawesome.com/de7107e192.js" crossorigin="anonymous"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Michroma&family=Nabla&family=Righteous&family=Unica+One&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&family=Unica+One&display=swap" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+        <link rel="icon" type="image/png" href="{% static 'network/assets/social.png' %}">
         <link href="{% static 'network/styles.css' %}" rel="stylesheet">
     </head>
     <body>
 
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand col text-left ps-4" href="/">
-                <img src="{% static 'network/assets/social.png' %}" height="40" class="d-inline-block align-top" alt="">etwork
+        <nav class="navbar navbar-expand navbar-light bg-light">
+            <div class="col">
+            <a class="navbar-brand text-left ps-4" href="/">
+                <img src="{% static 'network/assets/social.png' %}" height="30" class="d-inline-block align-top" alt="">etwork
             </a>
+            </div>
         
             <div class="nav pe-4">
                 <ul class="navbar-nav mr-auto">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" id="profile" data-section="profile-section"><strong>{{ user.username }}</strong></a>
+                            <a class="nav-link" id="profile" data-section="profile-section"><strong id="profile-username">{{ user.username }}</strong></a>
                         </li>
                     {% endif %}
                     <li class="nav-item">
