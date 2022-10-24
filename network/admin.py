@@ -23,14 +23,22 @@ class PostAdmin(admin.ModelAdmin):
 class LikeAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "post")
 
-# class FollowAdmin(admin.ModelAdmin):
-#     list_display = ("id", "follower", "following")
+    def user(self, obj):
+        return obj.user.username
+    def post(self, obj):
+        return obj.post.id
+    
 
-#     def following(self, obj):
-#         return obj.following.all()
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "post", "content", "timestamp")
+
+    def user(self, obj):
+        return obj.user.username
+    def post(self, obj):
+        return obj.post.id
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Like, LikeAdmin)
-# admin.site.register(Follow, FollowAdmin)
 admin.site.register(Profile, ProfileAdmin)
+admin.site.register(Comment, CommentAdmin)
