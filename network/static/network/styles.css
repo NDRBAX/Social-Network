@@ -33,7 +33,6 @@ a,
 }
 
 .profile-cover {
-    /* background-image: url(https://bootdey.com/img/Content/bg1.jpg); */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -117,4 +116,11 @@ a,
 
 .accordion-item {
     border: 0 !important;
+}
+
+.home-image {
+    width: 100%;
+    height: 83vh;
+    overflow: hidden;
+    object-fit: cover;
 }
