@@ -2,31 +2,48 @@
 
 {% block body %}
 
-    <h2>Register</h2>
+<div class="card mb-3 border-0 shadow w-100" style="min-height: 83vh;" >
+    <div class="row g-0">
+      <div class="col-md-6">
 
-    {% if message %}
-        <div>{{ message }}</div>
-    {% endif %}
+            <img src="https://images.unsplash.com/photo-1495001258031-d1b407bc1776?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" class=" rounded-start home-image" >
 
-    <form action="{% url 'register' %}" method="post">
-        {% csrf_token %}
-        <div class="form-group">
-            <input class="form-control" autofocus type="text" name="username" placeholder="Username">
+      </div>
+      <div class="col-md-6 d-flex align-items-center">
+        <div class="card-body text-center p-5">
+
+            <h2 class="card-title mb-3">Register</h2>
+
+            {% if message %}
+                <div>{{ message }}</div>
+            {% endif %}
+
+            <form action="{% url 'register' %}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input class="form-control mb-2" autofocus type="text" name="username" placeholder="Username">
+                </div>
+
+
+                <div class="form-group">
+                    <input class="form-control mb-2" type="email" name="email" placeholder="Email Address">
+                </div>
+                <div class="form-group">
+                    <input class="form-control mb-2" type="password" name="password" placeholder="Password">
+                </div>
+                <div class="form-group">
+                    <input class="form-control mb-2" type="password" name="confirmation" placeholder="Confirm Password">
+                </div>
+
+                <div class="d-grid">
+                    <input class="btn btn-primary mb-2" type="submit" value="Register">
+                </div>
+            </form>
+
+            Already have an account? <a href="{% url 'login' %}">Log In here.</a>
         </div>
-
-
-        <div class="form-group">
-            <input class="form-control" type="email" name="email" placeholder="Email Address">
-        </div>
-        <div class="form-group">
-            <input class="form-control" type="password" name="password" placeholder="Password">
-        </div>
-        <div class="form-group">
-            <input class="form-control" type="password" name="confirmation" placeholder="Confirm Password">
-        </div>
-        <input class="btn btn-primary" type="submit" value="Register">
-    </form>
-
-    Already have an account? <a href="{% url 'login' %}">Log In here.</a>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
