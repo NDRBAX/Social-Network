@@ -1,15 +1,11 @@
 import json
-from datetime import datetime
-from re import L
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, Http404, HttpResponseRedirect, JsonResponse
+from django.http import  HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-
-
 
 from .models import *
 
@@ -81,11 +77,11 @@ def section(request, section):
         comments = Comment.objects.all()
     elif section == "profile-section":
         posts = Post.objects.filter(user=request.user)
-        comments = Comment.objects.filter(user=request.user)
+        comments = Comment.objects.all()
     elif section == "following-section":
         following = Profile.objects.get(user=request.user).following.all()
         posts = Post.objects.filter(user__in=following)
-        comments = Comment.objects.filter(user=request.user)
+        comments = Comment.objects.all()
     else:
         return JsonResponse({"error": "Invalid page."}, status=400)
 
@@ -120,8 +116,6 @@ def edit_profile(request):
     profile.age = data["age"]
     profile.bio = data["bio"]
     
-
-    # get all the posts of this user and update the avatar
     posts = Post.objects.filter(user=request.user)
     print(posts)
     for post in posts:
@@ -199,7 +193,6 @@ def follow_user(request, username):
         if user_to_follow in profile.following.all():
             profile.following.remove(user_to_follow)
             profile.save()
-            # remove the user from the followers of the user to follow
             user_to_follow_profile = Profile.objects.get(user=user_to_follow)
             user_to_follow_profile.followers.remove(user)
             user_to_follow_profile.save()
@@ -207,7 +200,6 @@ def follow_user(request, username):
         else:
             profile.following.add(user_to_follow)
             profile.save()
-            # add the user to the followers of the user to follow
             user_to_follow_profile = Profile.objects.get(user=user_to_follow)
             user_to_follow_profile.followers.add(user)
             user_to_follow_profile.save()
@@ -222,8 +214,7 @@ def user_profile(request, username):
         profile = Profile.objects.get(user=user)
         posts = Post.objects.filter(user=user).all().order_by("-timestamp")
         liked_posts = Like.objects.filter(user=request.user).values_list("post", flat=True)
-        # comments / posts
-        comments = Comment.objects.filter(user=user).all().order_by("-timestamp")
+        comments = Comment.objects.all().order_by("-timestamp")
 
         return JsonResponse({
             "user": user.username,
