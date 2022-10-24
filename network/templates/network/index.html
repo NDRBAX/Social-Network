@@ -1,6 +1,7 @@
 {% extends "network/layout.html" %}
 {% load static %}
 
+
 {% block body %}
     <div class="row justify-content-center">
 
@@ -11,25 +12,24 @@
           <div class="bg-white shadow rounded overflow-hidden mb-4">
             <div class="profile-header">
 
-               <div id="profile-cover" class="profile-cover" style="background-image:url({{ profile.background_cover }})"></div>
+               <div id="profile-cover" class="profile-cover" style=""></div>
 
                <div class="profile-content">
 
                   <div class="profile-avatar">
-                     <img src="{{profile.avatar}}" alt="">
+                     <img id="profile-avatar" src="" alt="">
                   </div>
 
                   <div class="row justify-content-between">
                     <div class="col px-4 pt-5">
-                      <h4 class="pt-2">{{ user.username }}</h4>
-                      <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i>{{ profile.country }}</p>
+                      <h4 id="username-profile" class="pt-2"></h4>
+                      <p id="country-profile" class="mb-1"></p>
                     </div>
 
-                    <div class="col text-end ps-3 pe-0">
-                      <button type="button" class="btn btn-outline-light btn-sm btn-block mb-2" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        Edit Profile
-                      </button>
+                    <div id="info-profile" class="col text-end ps-3 pe-0">
+
                     </div>
+              
 
                   </div>
 
@@ -37,7 +37,7 @@
 
                
                <!-- Modal -->
-              <div class="modal fade " id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+              <div class="modal modal-lg fade " id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                 <div class="modal-dialog  modal-dialog-centered">
                   <div class="modal-content">
                     <div class="modal-header">
@@ -64,12 +64,19 @@
                         </div>
                         <div class="mb-3">
                           <label for="message-text" class="col-form-label">Bio:</label>
-                          <textarea class="form-control" id="bio">{{ profile.bio }}</textarea>
+                          <textarea class="form-control border-0 shadow-none edit-post-content" maxlength="300" rows="4" id="bio" oninput="return characters_left(this, 'characters-left-edit-profile')">{{ profile.bio }}</textarea>
                         </div>
                       </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                      <div class="modal-footer justify-content-between">
+                        <div class="col-4 text-start">
+                            <p class=" pb-0 mb-0" id="characters-left-edit-profile"></p>
+                        </div>
+                        <div class="col-7 me-0 pe-1 text-end">
+                            <button type="button" class="btn btn-secondary me-1" data-bs-dismiss="modal">Close</button>
+
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+
                       </div>
                   </form>
                   </div>
@@ -80,16 +87,13 @@
             <div class="bg-light pt-3 p-4 d-flex justify-content-center text-center">
               <ul class="list-inline mb-0">
                   <li class="list-inline-item me-5">
-                      <h5 class="font-weight-bold mb-0 d-block"> <i
-                        class="fa-solid fa-book me-2"></i>{{num_posts}}</h5><small class="text-muted">Posts</small>
+                      <h5 id="num-posts" class="font-weight-bold mb-0 d-block"></h5><small class="text-muted">Posts</small>
                   </li>
                   <li class="list-inline-item me-5">
-                      <h5 class="font-weight-bold mb-0 d-block"><i
-                        class="fas fa-user me-2"></i>{{num_followers}}</h5><small class="text-muted"> Followers</small>
+                      <h5 id="num-followers" class="font-weight-bold mb-0 d-block"></h5><small class="text-muted"> Followers</small>
                   </li>
                   <li class="list-inline-item">
-                      <h5 class="font-weight-bold mb-0 d-block"> <i
-                        class="fas fa-user me-2"></i>{{num_following}}</h5><small class="text-muted">Following</small>
+                      <h5 id="num-following" class="font-weight-bold mb-0 d-block"></h5><small class="text-muted">Following</small>
                   </li>
               </ul>
           </div>
@@ -97,9 +101,7 @@
 
           <div class="px-4 py-2">
               <h5 class="mb-3 mt-1 text-center">About</h5>
-              <div class="p-4 mb-3 text-center rounded shadow-sm bg-light">
-                <p>Hi, I'm {{ user.username }}. I'm {{ profile.age }} years old. I've joined this awesome social network at {{ user.date_joined }}</p>
-                <p>{{ profile.bio }}</p>
+              <div id="profile-bio" class="p-4 mb-3 text-center rounded shadow-sm bg-light">
               </div>
           </div>
          </div>
@@ -108,7 +110,6 @@
 
         <!-- ALL POSTS SECTION -->
         <div id="all-posts-section">
-            <h1>Lasts posts</h1>
         </div>
 
         <!-- FOLLOWING SECTION -->
@@ -116,29 +117,52 @@
             <h3>Following</h3>
         </div>
 
-                <!-- USER PROFILE SECTION -->
-                <div id="user-profile-section">
-                  <h3>User profile</h3>
-              </div>
-
         <!-- NEW POST -->
         <div id="new-post-section">
-            <h3>Make a new post</h3>
-
-            <form id="new-post-form">
-                <div class="form-group">
-                    <textarea class="form-control " id="new-post-content" rows="3" placeholder="What's on your mind?"></textarea>
+          <div class="card shadow border-0 mb-3">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-auto">
+                  <div class="profile-avatar">
+                    <img id="profile-avatar" src="{{ profile.avatar }}" alt="">
+                 </div>
                 </div>
-          
+                <div class="col ps-0 pe-2">
 
-                  <button type="submit" class="btn btn-primary mt-2 mb-3 text-end">Post</button>
-    
-                
-            </form>
+                  <form id="new-post-form">
+              
+                    <div class="form-group">
+                        <textarea class="form-control ps-1 pt-0 border-0 shadow-none" id="new-post-content" rows="3" placeholder="What's on your mind?" maxlength="300" oninput="return characters_left(this, 'characters-left')"></textarea>
+                    </div>
+              
+                    <div class="row justify-content-end">
+                      <div class="col ">
+                        <p id="characters-left" class="m-0 pt-3 ps-1"></p>
+                      </div>
+
+                      <div class="col-auto pe-3 me-1">
+                        <button type="submit" class="btn btn-outline-primary text-end">Post</button>
+                      </div>
+                    </div>
+                      
+                </form>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
         </div>
 
         <!-- POSTS -->
-        <div id="posts" class="mt-4"></div>
+        <div id="posts" class="mt-4">
+          <div class="accordion accordion-flush" id="accordionPosts"></div>
+          <div id="no-posts"></div>
+        </div>
 
         <!-- PAGINATION -->
         <div id="pagination">
