@@ -1,36 +1,15 @@
 <div align="center" id="top"> 
-  <img src="./.github/app.gif" alt="Project4" />
+  <img src="./network/static/network/assets/social.png" alt="Commerce" height="150px"/>
 
-  &#xa0;
+&#xa0;
 
-  <!-- <a href="https://project4.netlify.app">Demo</a> -->
 </div>
 
-<h1 align="center">Project4</h1>
+<h1 align="center">Network</h1>
 
 <p align="center">
-  <img alt="Github top language" src="https://img.shields.io/github/languages/top/{{YOUR_GITHUB_USERNAME}}/project4?color=56BEB8">
-
-  <img alt="Github language count" src="https://img.shields.io/github/languages/count/{{YOUR_GITHUB_USERNAME}}/project4?color=56BEB8">
-
-  <img alt="Repository size" src="https://img.shields.io/github/repo-size/{{YOUR_GITHUB_USERNAME}}/project4?color=56BEB8">
-
-  <img alt="License" src="https://img.shields.io/github/license/{{YOUR_GITHUB_USERNAME}}/project4?color=56BEB8">
-
-  <!-- <img alt="Github issues" src="https://img.shields.io/github/issues/{{YOUR_GITHUB_USERNAME}}/project4?color=56BEB8" /> -->
-
-  <!-- <img alt="Github forks" src="https://img.shields.io/github/forks/{{YOUR_GITHUB_USERNAME}}/project4?color=56BEB8" /> -->
-
-  <!-- <img alt="Github stars" src="https://img.shields.io/github/stars/{{YOUR_GITHUB_USERNAME}}/project4?color=56BEB8" /> -->
+  <img alt="Github top language" src="https://img.shields.io/github/languages/top/NDRBAX/Social-Network?color=56BEB8"> <img alt="Github language count" src="https://img.shields.io/github/languages/count/NDRBAX/Social-Network?color=56BEB8"> <img alt="Repository size" src="https://img.shields.io/github/repo-size/NDRBAX/Social-Network?color=56BEB8"> <img alt="License" src="https://img.shields.io/github/license/NDRBAX/Social-Network?color=56BEB8"> <img alt="Github stars" src="https://img.shields.io/github/stars/NDRBAX/Social-Network?color=56BEB8" />
 </p>
-
-<!-- Status -->
-
-<!-- <h4 align="center"> 
-	🚧  Project4 🚀 Under construction...  🚧
-</h4> 
-
-<hr> -->
 
 <p align="center">
   <a href="#dart-about">About</a> &#xa0; | &#xa0; 
@@ -39,60 +18,79 @@
   <a href="#white_check_mark-requirements">Requirements</a> &#xa0; | &#xa0;
   <a href="#checkered_flag-starting">Starting</a> &#xa0; | &#xa0;
   <a href="#memo-license">License</a> &#xa0; | &#xa0;
-  <a href="https://github.com/{{YOUR_GITHUB_USERNAME}}" target="_blank">Author</a>
 </p>
 
 <br>
 
-## :dart: About ##
+## :dart: About
 
-Describe your project
+A Twitter-like social network website for making posts and following users.
 
-## :sparkles: Features ##
+## :sparkles: Features
 
-:heavy_check_mark: Feature 1;\
-:heavy_check_mark: Feature 2;\
-:heavy_check_mark: Feature 3;
+:heavy_check_mark: Create and edit user-profile\
+:heavy_check_mark: Make new posts\
+:heavy_check_mark: Edit posts or delete them\
+:heavy_check_mark: Like or unlike a post\
+:heavy_check_mark: Follow or unfollow other users\
+:heavy_check_mark: Pagination : 10 posts per page
 
-## :rocket: Technologies ##
+</br>
+
+<div align="center">
+  <p>You can check a preview of this project on my <a href="https://youtu.be/_9zXYKbGCmA">YouTube Channel</a> !</p>
+  <img src="./assets/preview-1.png" height="150px" />
+  <img src="./assets/preview-2.png" height="150px" />
+  <img src="./assets/preview-3.png" height="150px" />
+  <img src="./assets/preview-4.png" height="150px" />
+  <img src="./assets/preview-5.png" height="150px" />
+  <img src="./assets/preview-6.png" height="150px" />
+</div>
+
+</br>
+
+## :rocket: Technologies
 
 The following tools were used in this project:
 
-- [Expo](https://expo.io/)
-- [Node.js](https://nodejs.org/en/)
-- [React](https://pt-br.reactjs.org/)
-- [React Native](https://reactnative.dev/)
-- [TypeScript](https://www.typescriptlang.org/)
+- [Python](https://www.python.org/)
+- JavaScript
+- [Django](https://www.djangoproject.com/)
+- [Bootstrap 5.2](https://getbootstrap.com/docs/5.2/getting-started/introduction/)
 
-## :white_check_mark: Requirements ##
+## :white_check_mark: Requirements
 
-Before starting :checkered_flag:, you need to have [Git](https://git-scm.com) and [Node](https://nodejs.org/en/) installed.
+Before starting :checkered_flag:, you need to have [Python](https://www.python.org/) and [pip](https://pypi.org/project/pip/) installed.
 
-## :checkered_flag: Starting ##
+## :checkered_flag: Starting
 
 ```bash
 # Clone this project
-$ git clone https://github.com/{{YOUR_GITHUB_USERNAME}}/project4
+$ git clone https://github.com/NDRBAX/Social-Network
 
 # Access
-$ cd project4
+$ cd Social-Network
 
-# Install dependencies
-$ yarn
+# Make migrations
+$ python manage.py makemigrations && python manage.py migrate --run-syncdb
 
-# Run the project
-$ yarn start
+# Run
+$ python manage.py runserver
 
-# The server will initialize in the <http://localhost:3000>
+# The server will initialize in the <http://localhost:8000>
 ```
 
-## :memo: License ##
-
-This project is under license from MIT. For more details, see the [LICENSE](LICENSE.md) file.
-
-
-Made with :heart: by <a href="https://github.com/{{YOUR_GITHUB_USERNAME}}" target="_blank">{{YOUR_NAME}}</a>
+## :memo: License
 
 &#xa0;
 
+<div align="center">
+
+_This project is under license from MIT. For more details, see the [LICENSE](LICENSE.md) file._ \
+Made with :heart: by <a href="https://github.com/NDRBAX" target="_blank">NDRBAX</a>
+
+</div>
+
+<div align="right">
 <a href="#top">Back to top</a>
+</div>
