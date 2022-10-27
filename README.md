@@ -1,5 +1,5 @@
 <div align="center" id="top"> 
-  <img src="./network/static/network/assets/social.png" alt="Commerce" height="150px"/>
+  <img src="./network/static/network/assets/social.png" alt="Commerce" height="100px"/>
 
 &#xa0;
 
@@ -77,7 +77,7 @@ $ python manage.py makemigrations && python manage.py migrate --run-syncdb
 # Run
 $ python manage.py runserver
 
-# The server will initialize in the <http://localhost:8000>
+# The server will initialize in the http://localhost:8000
 ```
 
 ## :memo: License
